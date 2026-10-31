@@ -42,3 +42,4 @@ def render_html_to_jpeg(html_path, output_jpeg_paths, width=3600, height=2400):
     return True
 
 print("Helper loaded successfully.")
+

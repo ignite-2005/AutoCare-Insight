@@ -752,3 +752,4 @@ out_jpegs = [
 
 success = render_html_to_jpeg(html_path, out_jpegs, width=3600, height=2450)
 print("ER Diagram rendering result:", success)
+

@@ -816,3 +816,4 @@ out_jpegs = [
 
 success = render_html_to_jpeg(html_path, out_jpegs, width=3800, height=2600)
 print("Relational Schema rendering result:", success)
+
