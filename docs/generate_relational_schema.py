@@ -1,0 +1,818 @@
+import os
+from render_helper import render_html_to_jpeg, docs_dir, db_dir
+
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AutoCare Insight — Relational Schema & Referential Integrity Model</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0b1120;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      width: 3800px;
+      height: 2600px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Top Banner */
+    .banner {
+      width: 100%;
+      height: 125px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
+      border-bottom: 3px solid #2563eb;
+      padding: 20px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .banner-title h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .banner-title h1 span.badge {
+      font-size: 13px;
+      font-weight: 700;
+      background: #3b82f6;
+      color: #ffffff;
+      padding: 5px 12px;
+      border-radius: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .banner-title p {
+      font-size: 15px;
+      color: #94a3b8;
+      margin-top: 5px;
+    }
+    .banner-meta {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .meta-box {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid #334155;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-align: right;
+    }
+    .meta-box .label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600; }
+    .meta-box .val { font-size: 14px; color: #38bdf8; font-weight: 700; }
+
+    /* Legend Bar */
+    .legend-bar {
+      width: 100%;
+      height: 55px;
+      background: #111827;
+      border-bottom: 1px solid #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 60px;
+      font-size: 13px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #cbd5e1;
+    }
+    .tag-pk { background: #eab308; color: #000; font-weight: 800; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+    .tag-fk { background: #38bdf8; color: #000; font-weight: 800; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+    .tag-uk { background: #c084fc; color: #000; font-weight: 800; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+    .action-badge { padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+
+    /* Canvas */
+    .canvas-container {
+      position: absolute;
+      top: 180px;
+      left: 0;
+      width: 3800px;
+      height: 2420px;
+    }
+
+    svg.fk-arrows {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3800px;
+      height: 2420px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Relational Schema Table Cards */
+    .table-card {
+      position: absolute;
+      background: #1e293b;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.6);
+      z-index: 2;
+      overflow: hidden;
+      font-size: 11.5px;
+    }
+    .table-header {
+      padding: 8px 14px;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      letter-spacing: 0.5px;
+    }
+    .table-header .table-sub {
+      font-size: 10px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    /* Table Colors */
+    .tbl-users .table-header { background: #1e40af; color: #fff; }
+    .tbl-customers .table-header { background: #0f766e; color: #fff; }
+    .tbl-catalogue .table-header { background: #4338ca; color: #fff; }
+    .tbl-parts .table-header { background: #be123c; color: #fff; }
+    .tbl-services .table-header { background: #047857; color: #fff; }
+    .tbl-appointments .table-header { background: #b45309; color: #fff; }
+    .tbl-vehicles .table-header { background: #0284c7; color: #fff; }
+    .tbl-job-services .table-header { background: #0d9488; color: #fff; }
+    .tbl-part-usage .table-header { background: #e11d48; color: #fff; }
+    .tbl-jobs .table-header { background: #c2410c; color: #fff; }
+    .tbl-invoices .table-header { background: #7e22ce; color: #fff; }
+    .tbl-payments .table-header { background: #9333ea; color: #fff; }
+    .tbl-reminders .table-header { background: #475569; color: #fff; }
+
+    .schema-grid {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1e293b;
+    }
+    .schema-grid tr {
+      border-bottom: 1px solid #273549;
+    }
+    .schema-grid tr:last-child {
+      border-bottom: none;
+    }
+    .schema-grid td {
+      padding: 4px 10px;
+      font-size: 11.5px;
+      vertical-align: middle;
+      font-family: "Cascadia Code", "Consolas", monospace;
+    }
+    .col-key {
+      width: 48px;
+      text-align: center;
+    }
+    .col-name {
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+    .col-pk {
+      color: #facc15;
+      text-decoration: underline;
+      font-weight: 700;
+    }
+    .col-fk {
+      color: #38bdf8;
+      font-style: italic;
+    }
+    .col-type {
+      color: #94a3b8;
+      font-size: 11px;
+    }
+    .col-ref {
+      color: #64748b;
+      font-size: 10px;
+      text-align: right;
+    }
+
+    /* Bottom Notation & Constraints Section */
+    .notation-panel {
+      position: absolute;
+      top: 1540px;
+      left: 50px;
+      width: 3700px;
+      height: 850px;
+      background: #111827;
+      border: 1.5px solid #1f2937;
+      border-radius: 12px;
+      padding: 24px 32px;
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 30px;
+      z-index: 2;
+    }
+    .panel-box h3 {
+      font-size: 17px;
+      color: #38bdf8;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .notation-text {
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      background: #0f172a;
+      padding: 16px 20px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      height: 740px;
+      overflow: hidden;
+    }
+    .notation-text strong.rel-name {
+      color: #facc15;
+      font-weight: 700;
+    }
+    .notation-text span.pk-attr {
+      text-decoration: underline;
+      color: #fde047;
+      font-weight: 700;
+    }
+    .notation-text span.fk-attr {
+      color: #38bdf8;
+      font-style: italic;
+    }
+    .notation-text span.uk-attr {
+      color: #c084fc;
+    }
+
+    /* Constraint Table */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      background: #0f172a;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #1e293b;
+    }
+    .matrix-table th {
+      background: #1e293b;
+      color: #94a3b8;
+      text-align: left;
+      padding: 6px 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #334155;
+    }
+    .matrix-table td {
+      padding: 5px 10px;
+      border-bottom: 1px solid #1e293b;
+      color: #cbd5e1;
+      font-family: "Cascadia Code", "Consolas", monospace;
+    }
+    .matrix-table tr:hover {
+      background: #162235;
+    }
+    .act-restrict { background: #1e3a8a; color: #93c5fd; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+    .act-cascade { background: #9a3412; color: #fed7aa; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+    .act-setnull { background: #065f46; color: #a7f3d0; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+
+    /* SVG Arrow text */
+    .arrow-text {
+      font-size: 10px;
+      font-weight: 700;
+      fill: #38bdf8;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Banner -->
+  <div class="banner">
+    <div class="banner-title">
+      <h1>
+        AutoCare Insight &mdash; Relational Schema &amp; Referential Integrity Model
+        <span class="badge">MySQL 8.0 InnoDB</span>
+      </h1>
+      <p>Formal Mathematical Relational Database Schema &bull; 13 Fully Normalized (3NF/BCNF) Relational Tables &bull; 19 Foreign Key Referential Integrity Constraints</p>
+    </div>
+    <div class="banner-meta">
+      <div class="meta-box">
+        <div class="label">Normalization Degree</div>
+        <div class="val">Boyce-Codd Normal Form (BCNF)</div>
+      </div>
+      <div class="meta-box">
+        <div class="label">Total Foreign Keys</div>
+        <div class="val">19 Referential Integrity Links</div>
+      </div>
+      <div class="meta-box">
+        <div class="label">Foreign Engine</div>
+        <div class="val">MySQL 8.0 InnoDB ACID</div>
+      </div>
+      <div class="meta-box">
+        <div class="label">Academic Standards</div>
+        <div class="val">PES University CSE DBMS Level-3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend Bar -->
+  <div class="legend-bar">
+    <div class="legend-item">
+      <span class="tag-pk">PK</span> <strong>Primary Key (Underlined, Candidate Key chosen for relation identification)</strong>
+    </div>
+    <div class="legend-item">
+      <span class="tag-fk">FK</span> <strong>Foreign Key (Referential link pointing to parent table primary key)</strong>
+    </div>
+    <div class="legend-item">
+      <span class="tag-uk">UK</span> <strong>Unique Constraint (Candidate Key ensuring alternate uniqueness)</strong>
+    </div>
+    <div class="legend-item">
+      <span class="act-restrict">RESTRICT</span> <strong>Prevents parent deletion if child records exist (Maintains historical audit integrity)</strong>
+    </div>
+    <div class="legend-item">
+      <span class="act-cascade">CASCADE</span> <strong>Automatically deletes child records upon parent deletion (For dependent bridge entities)</strong>
+    </div>
+    <div class="legend-item">
+      <span class="act-setnull">SET NULL</span> <strong>Sets child foreign key to NULL upon parent deletion (For non-critical assignments)</strong>
+    </div>
+  </div>
+
+  <div class="canvas-container">
+
+    <!-- SVG ARROWS LAYER (Referential Integrity Connectors) -->
+    <svg class="fk-arrows" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+        </marker>
+        <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+        </marker>
+        <marker id="arr-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#c084fc" />
+        </marker>
+      </defs>
+
+      <!-- 1. customer_vehicles.customer_id -> customers.customer_id [RESTRICT] -->
+      <!-- From (780, 680) to (740, 240) -->
+      <path d="M 780 660 L 780 480 L 740 480 L 740 240" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arr-blue)" />
+      <text x="760" y="520" class="arrow-text">FK: customer_id [RESTRICT]</text>
+
+      <!-- 2. customer_vehicles.catalogue_id -> vehicle_catalogue.catalogue_id [SET NULL] -->
+      <!-- From (920, 660) to (1220, 600) -> (1220, 240) -->
+      <path d="M 920 660 L 920 540 L 1220 540 L 1220 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="1070" y="530" class="arrow-text">FK: catalogue_id [SET NULL]</text>
+
+      <!-- 3. appointments.customer_id -> customers.customer_id [RESTRICT] -->
+      <!-- From (280, 660) to (280, 480) -> (600, 480) -> (600, 240) -->
+      <path d="M 280 660 L 280 480 L 600 480 L 600 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="440" y="470" class="arrow-text">FK: customer_id [RESTRICT]</text>
+
+      <!-- 4. appointments.vehicle_id -> customer_vehicles.vehicle_id [RESTRICT] -->
+      <!-- From (500, 720) to (550, 720) -->
+      <path d="M 500 720 L 550 720" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arr-blue)" />
+      <text x="525" y="705" class="arrow-text">FK: vehicle_id</text>
+
+      <!-- 5. appointments.advisor_id -> users.user_id [SET NULL] -->
+      <!-- From (180, 660) to (180, 240) -->
+      <path d="M 180 660 L 180 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="180" y="450" class="arrow-text">FK: advisor_id [SET NULL]</text>
+
+      <!-- 6. appointments.service_type_id -> service_types.service_type_id [SET NULL] -->
+      <!-- From (500, 780) up to y=190 across to (2240, 190) -> (2240, 240) -->
+      <path d="M 450 660 L 450 190 L 2240 190 L 2240 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="1350" y="180" class="arrow-text">FK: service_type_id [SET NULL]</text>
+
+      <!-- 7. service_jobs.appointment_id -> appointments.appointment_id [SET NULL] -->
+      <!-- From (550, 1160) to (300, 1160) -> (300, 950) -->
+      <path d="M 550 1160 L 300 1160 L 300 950" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <text x="420" y="1150" class="arrow-text">FK: appointment_id [SET NULL]</text>
+
+      <!-- 8. service_jobs.mechanic_id -> users.user_id [SET NULL] -->
+      <!-- From (550, 1200) to (90, 1200) -> (90, 240) -->
+      <path d="M 550 1200 L 90 1200 L 90 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="120" y="1000" class="arrow-text">FK: mechanic_id [SET NULL]</text>
+
+      <!-- 9. service_jobs.vehicle_id -> customer_vehicles.vehicle_id [RESTRICT] -->
+      <!-- From (750, 1120) to (750, 950) -->
+      <path d="M 750 1120 L 750 950" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arr-blue)" />
+      <text x="750" y="1040" class="arrow-text">FK: vehicle_id [RESTRICT]</text>
+
+      <!-- 10. job_services.job_id -> service_jobs.job_id [CASCADE] -->
+      <!-- From (1540, 700) to (1150, 700) -> (1150, 1080) -> (1020, 1080) -> (1020, 1120) -->
+      <path d="M 1540 700 L 1150 700 L 1150 1080 L 950 1080 L 950 1120" fill="none" stroke="#f59e0b" stroke-width="2.5" marker-end="url(#arr-amber)" />
+      <text x="1320" y="690" class="arrow-text">FK: job_id [CASCADE]</text>
+
+      <!-- 11. job_services.service_type_id -> service_types.service_type_id [RESTRICT] -->
+      <!-- From (1980, 700) to (2150, 700) -> (2150, 240) -->
+      <path d="M 1980 700 L 2150 700 L 2150 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="2100" y="550" class="arrow-text">FK: service_type_id [RESTRICT]</text>
+
+      <!-- 12. part_usage.job_id -> service_jobs.job_id [RESTRICT] -->
+      <!-- From (2040, 720) to (1400, 720) -> (1400, 1050) -> (850, 1050) -> (850, 1120) -->
+      <path d="M 2040 720 L 1400 720 L 1400 1050 L 850 1050 L 850 1120" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="1650" y="710" class="arrow-text">FK: job_id [RESTRICT]</text>
+
+      <!-- 13. part_usage.part_id -> spare_parts.part_id [RESTRICT] -->
+      <!-- From (2200, 660) to (2200, 520) -> (1760, 520) -> (1760, 240) -->
+      <path d="M 2200 660 L 2200 520 L 1760 520 L 1760 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="1980" y="510" class="arrow-text">FK: part_id [RESTRICT]</text>
+
+      <!-- 14. invoices.job_id -> service_jobs.job_id [RESTRICT] (1:1) -->
+      <!-- From (1070, 1160) to (1020, 1160) -->
+      <path d="M 1070 1160 L 1020 1160" fill="none" stroke="#c084fc" stroke-width="3" marker-end="url(#arr-purple)" />
+      <text x="1045" y="1145" class="arrow-text" style="fill:#c084fc;">1:1 UK: job_id</text>
+
+      <!-- 15. invoices.customer_id -> customers.customer_id [RESTRICT] -->
+      <!-- From (1300, 1120) up to y=600 across to (820, 600) -> (820, 240) -->
+      <path d="M 1300 1120 L 1300 600 L 820 600 L 820 240" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arr-blue)" />
+      <text x="1060" y="590" class="arrow-text">FK: customer_id [RESTRICT]</text>
+
+      <!-- 16. invoice_payments.invoice_id -> invoices.invoice_id [RESTRICT] -->
+      <!-- From (1580, 1160) to (1530, 1160) -->
+      <path d="M 1580 1160 L 1530 1160" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arr-blue)" />
+      <text x="1555" y="1145" class="arrow-text">FK: invoice_id</text>
+
+      <!-- 17. invoice_payments.recorded_by -> users.user_id [SET NULL] -->
+      <!-- From (1800, 1120) to (1800, 140) -> (250, 140) -> (250, 210) -->
+      <path d="M 1800 1120 L 1800 140 L 250 140 L 250 210" fill="none" stroke="#38bdf8" stroke-width="1.8" marker-end="url(#arr-blue)" />
+      <text x="1025" y="130" class="arrow-text">FK: recorded_by [SET NULL]</text>
+
+      <!-- 18. maintenance_reminders.vehicle_id -> customer_vehicles.vehicle_id [CASCADE] -->
+      <!-- From (250, 1120) to (250, 1020) -> (680, 1020) -> (680, 950) -->
+      <path d="M 250 1120 L 250 1020 L 680 1020 L 680 950" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-amber)" />
+      <text x="465" y="1010" class="arrow-text">FK: vehicle_id [CASCADE]</text>
+
+      <!-- 19. maintenance_reminders.service_type_id -> service_types.service_type_id [SET NULL] -->
+      <path d="M 380 1120 L 380 1060 L 2300 1060 L 2300 240" fill="none" stroke="#38bdf8" stroke-width="1.8" marker-end="url(#arr-blue)" />
+      <text x="1340" y="1050" class="arrow-text">FK: service_type_id [SET NULL]</text>
+    </svg>
+
+    <!-- ROW 1 TABLES -->
+
+    <!-- Table 1: users -->
+    <div class="table-card tbl-users" style="left: 50px; top: 210px; width: 440px;">
+      <div class="table-header">
+        <span>users</span>
+        <span class="table-sub">InnoDB &bull; 6 Initial Users</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">user_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">full_name</td><td class="col-type">VARCHAR(100)</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"><span class="tag-uk">UK</span></td><td class="col-name">email</td><td class="col-type">VARCHAR(150)</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">password_hash</td><td class="col-type">VARCHAR(255)</td><td class="col-ref">NOT NULL (Bcrypt)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">role</td><td class="col-type">ENUM('admin','advisor','mechanic')</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">phone</td><td class="col-type">VARCHAR(20)</td><td class="col-ref">NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">is_active</td><td class="col-type">TINYINT(1)</td><td class="col-ref">DEFAULT 1</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">created_at / updated_at</td><td class="col-type">DATETIME</td><td class="col-ref">DEFAULT NOW()</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 2: customers -->
+    <div class="table-card tbl-customers" style="left: 530px; top: 210px; width: 440px;">
+      <div class="table-header">
+        <span>customers</span>
+        <span class="table-sub">InnoDB &bull; Vehicle Owners</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">customer_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">full_name</td><td class="col-type">VARCHAR(100)</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"><span class="tag-uk">UK</span></td><td class="col-name">email</td><td class="col-type">VARCHAR(150)</td><td class="col-ref">UNIQUE</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">phone</td><td class="col-type">VARCHAR(20)</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">address</td><td class="col-type">TEXT</td><td class="col-ref">NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">city / state / zip</td><td class="col-type">VARCHAR(80/80/20)</td><td class="col-ref">NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">created_at / updated_at</td><td class="col-type">DATETIME</td><td class="col-ref">DEFAULT NOW()</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 3: vehicle_catalogue -->
+    <div class="table-card tbl-catalogue" style="left: 1010px; top: 210px; width: 480px;">
+      <div class="table-header">
+        <span>vehicle_catalogue</span>
+        <span class="table-sub">InnoDB &bull; 3,229 Models (LDV/AFV/MHD)</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">catalogue_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-uk">UK</span></td><td class="col-name">mfr, model, year, fuel, src</td><td class="col-type">COMPOSITE UNIQUE</td><td class="col-ref">5 Columns</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">category / fuel / fuel_code</td><td class="col-type">VARCHAR</td><td class="col-ref">Catalogue Spec</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">engine_type / size / cyl</td><td class="col-type">VARCHAR / TINYINT</td><td class="col-ref">Powertrain</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">transmission / drivetrain</td><td class="col-type">VARCHAR(50/20)</td><td class="col-ref">Configuration</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">alt_economy / conv_economy</td><td class="col-type">DECIMAL(6,2)</td><td class="col-ref">MPG Metrics</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">electric_range / phev_range</td><td class="col-type">DECIMAL(7,2)</td><td class="col-ref">EV Range (mi)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">source_dataset</td><td class="col-type">ENUM('LDV','AFV','MHD')</td><td class="col-ref">NOT NULL</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 4: spare_parts -->
+    <div class="table-card tbl-parts" style="left: 1530px; top: 210px; width: 460px;">
+      <div class="table-header">
+        <span>spare_parts</span>
+        <span class="table-sub">InnoDB &bull; Parts &amp; Consumables</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">part_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-uk">UK</span></td><td class="col-name">part_number</td><td class="col-type">VARCHAR(60)</td><td class="col-ref">UNIQUE SKU</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">part_name / category</td><td class="col-type">VARCHAR(150/80)</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">brand / location_code</td><td class="col-type">VARCHAR(80/30)</td><td class="col-ref">Shelf Bin</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">unit_cost / selling_price</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">Cost &amp; MRP</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">qty_in_stock</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">DEFAULT 0</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">reorder_level</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">DEFAULT 5</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">is_active</td><td class="col-type">TINYINT(1)</td><td class="col-ref">DEFAULT 1</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 5: service_types -->
+    <div class="table-card tbl-services" style="left: 2030px; top: 210px; width: 440px;">
+      <div class="table-header">
+        <span>service_types</span>
+        <span class="table-sub">InnoDB &bull; Workshop Service Menu</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">service_type_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-uk">UK</span></td><td class="col-name">service_name</td><td class="col-type">VARCHAR(100)</td><td class="col-ref">NOT NULL, UNIQUE</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">description</td><td class="col-type">TEXT</td><td class="col-ref">NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">estimated_duration_mins</td><td class="col-type">SMALLINT UNSIGNED</td><td class="col-ref">DEFAULT 60</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">base_price</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">DEFAULT 0.00</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">is_active</td><td class="col-type">TINYINT(1)</td><td class="col-ref">DEFAULT 1</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">created_at</td><td class="col-type">DATETIME</td><td class="col-ref">DEFAULT NOW()</td></tr>
+      </table>
+    </div>
+
+    <!-- ROW 2 TABLES -->
+
+    <!-- Table 6: appointments -->
+    <div class="table-card tbl-appointments" style="left: 50px; top: 660px; width: 450px;">
+      <div class="table-header">
+        <span>appointments</span>
+        <span class="table-sub">InnoDB &bull; Booking Transactions</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">appointment_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">customer_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; customers (RESTRICT)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">vehicle_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; customer_vehicles (RESTRICT)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">advisor_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; users (SET NULL)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">scheduled_at</td><td class="col-type">DATETIME</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">status</td><td class="col-type">ENUM('pending','confirmed',...)</td><td class="col-ref">DEFAULT 'pending'</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">service_type_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; service_types (SET NULL)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">mileage_at_booking</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">Odometer</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">customer_notes / advisor_notes</td><td class="col-type">TEXT</td><td class="col-ref">Problem Description</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 7: customer_vehicles -->
+    <div class="table-card tbl-vehicles" style="left: 550px; top: 660px; width: 460px;">
+      <div class="table-header">
+        <span>customer_vehicles</span>
+        <span class="table-sub">InnoDB &bull; Registered Fleet</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">vehicle_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">customer_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; customers (RESTRICT)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">catalogue_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; catalogue (SET NULL)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">license_plate</td><td class="col-type">VARCHAR(20)</td><td class="col-ref">NOT NULL</td></tr>
+        <tr><td class="col-key"><span class="tag-uk">UK</span></td><td class="col-name">vin</td><td class="col-type">VARCHAR(17)</td><td class="col-ref">UNIQUE VIN</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">color / purchase_year</td><td class="col-type">VARCHAR(40) / SMALLINT</td><td class="col-ref">Details</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">current_odometer</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">DEFAULT 0</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">fuel_override / notes</td><td class="col-type">VARCHAR(60) / TEXT</td><td class="col-ref">Custom Fuel</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">is_active</td><td class="col-type">TINYINT(1)</td><td class="col-ref">DEFAULT 1</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 8: job_services (Bridge Table) -->
+    <div class="table-card tbl-job-services" style="left: 1540px; top: 660px; width: 440px;">
+      <div class="table-header">
+        <span>job_services</span>
+        <span class="table-sub">InnoDB &bull; M:N Bridge (Jobs &harr; Services)</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">job_service_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">job_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; service_jobs (CASCADE)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">service_type_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; service_types (RESTRICT)</td></tr>
+        <tr><td class="col-key"><span class="tag-uk">UK</span></td><td class="col-name">(job_id, service_type_id)</td><td class="col-type">COMPOSITE UNIQUE</td><td class="col-ref">No Duplicates</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">service_price</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">Price Charged</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">technician_notes</td><td class="col-type">TEXT</td><td class="col-ref">Notes</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 9: part_usage (Bridge Table) -->
+    <div class="table-card tbl-part-usage" style="left: 2040px; top: 660px; width: 430px;">
+      <div class="table-header">
+        <span>part_usage</span>
+        <span class="table-sub">InnoDB &bull; M:N Bridge (Jobs &harr; Parts)</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">usage_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">job_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; service_jobs (RESTRICT)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">part_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; spare_parts (RESTRICT)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">qty_used</td><td class="col-type">SMALLINT UNSIGNED</td><td class="col-ref">DEFAULT 1</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">unit_price_charged</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">Historical Price</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">used_at</td><td class="col-type">DATETIME</td><td class="col-ref">DEFAULT NOW()</td></tr>
+      </table>
+    </div>
+
+    <!-- ROW 3 TABLES -->
+
+    <!-- Table 10: maintenance_reminders -->
+    <div class="table-card tbl-reminders" style="left: 50px; top: 1120px; width: 460px;">
+      <div class="table-header">
+        <span>maintenance_reminders</span>
+        <span class="table-sub">InnoDB &bull; Predictive Alerts</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">reminder_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">vehicle_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; vehicles (CASCADE)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">service_type_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; service_types (SET NULL)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">reminder_type</td><td class="col-type">ENUM('date','mileage','interval')</td><td class="col-ref">Trigger Mode</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">next_service_date</td><td class="col-type">DATE</td><td class="col-ref">Date Trigger</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">next_service_odometer</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">Odometer Trigger</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">interval_km / interval_days</td><td class="col-type">INT / SMALLINT</td><td class="col-ref">Periodic Interval</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">is_sent / is_active</td><td class="col-type">TINYINT(1)</td><td class="col-ref">Flags</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">created_by</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; users (SET NULL)</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 11: service_jobs -->
+    <div class="table-card tbl-jobs" style="left: 550px; top: 1120px; width: 470px;">
+      <div class="table-header">
+        <span>service_jobs</span>
+        <span class="table-sub">InnoDB &bull; Workshop Job Cards</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">job_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">appointment_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; appointments (SET NULL)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">mechanic_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; users (SET NULL)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">vehicle_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; customer_vehicles (RESTRICT)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">status</td><td class="col-type">ENUM('assigned','in_progress',...)</td><td class="col-ref">State Machine</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">odometer_in / odometer_out</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">Mileage Validation</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">started_at / completed_at</td><td class="col-type">DATETIME</td><td class="col-ref">Timestamps</td></tr>
+        <tr><td class="col-key"><span class="tag-fk" style="background:#22c55e; color:#000;">DOC</span></td><td class="col-name" style="color:#86efac; font-style:italic;">mongo_report_id</td><td class="col-type">VARCHAR(24)</td><td class="col-ref">&rarr; MongoDB ObjectId</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">internal_notes</td><td class="col-type">TEXT</td><td class="col-ref">Mechanic Log</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 12: invoices -->
+    <div class="table-card tbl-invoices" style="left: 1070px; top: 1120px; width: 460px;">
+      <div class="table-header">
+        <span>invoices</span>
+        <span class="table-sub">InnoDB &bull; Financial Ledger (1:1 with Job)</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">invoice_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span><span class="tag-uk" style="margin-left:2px;">UK</span></td><td class="col-name col-fk" style="color:#d8b4fe;">job_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">UNIQUE &rarr; jobs (RESTRICT)</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">customer_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; customers (RESTRICT)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">subtotal</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">Services + Parts</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">tax_rate / tax_amount</td><td class="col-type">DECIMAL(5,2 / 10,2)</td><td class="col-ref">18.00% GST</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">discount_amount</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">Discount</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">total_amount</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">Grand Total</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">status</td><td class="col-type">ENUM('draft','issued','paid',...)</td><td class="col-ref">Status</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">due_date / issued_at</td><td class="col-type">DATE / DATETIME</td><td class="col-ref">Terms</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 13: invoice_payments -->
+    <div class="table-card tbl-payments" style="left: 1580px; top: 1120px; width: 440px;">
+      <div class="table-header">
+        <span>invoice_payments</span>
+        <span class="table-sub">InnoDB &bull; Partial Payment Receipts</span>
+      </div>
+      <table class="schema-grid">
+        <tr><td class="col-key"><span class="tag-pk">PK</span></td><td class="col-name col-pk">payment_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">AUTO_INCREMENT</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">invoice_id</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; invoices (RESTRICT)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">amount_paid</td><td class="col-type">DECIMAL(10,2)</td><td class="col-ref">CHECK &gt; 0.00</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">payment_method</td><td class="col-type">ENUM('cash','card','upi',...)</td><td class="col-ref">Mode</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">reference_number</td><td class="col-type">VARCHAR(100)</td><td class="col-ref">UPI / Txn Ref</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">paid_at</td><td class="col-type">DATETIME</td><td class="col-ref">DEFAULT NOW()</td></tr>
+        <tr><td class="col-key"><span class="tag-fk">FK</span></td><td class="col-name col-fk">recorded_by</td><td class="col-type">INT UNSIGNED</td><td class="col-ref">&rarr; users (SET NULL)</td></tr>
+        <tr><td class="col-key"></td><td class="col-name">notes</td><td class="col-type">TEXT</td><td class="col-ref">Remarks</td></tr>
+      </table>
+    </div>
+
+    <!-- NOTATION & CONSTRAINTS PANEL -->
+    <div class="notation-panel">
+
+      <!-- Left Column: Standard Textbook Schema Notation -->
+      <div class="panel-box">
+        <h3>1. Formal Academic Relational Schema Notation (3NF / BCNF)</h3>
+        <div class="notation-text">
+          <strong class="rel-name">USERS</strong> (<span class="pk-attr">user_id</span>, full_name, <span class="uk-attr">email</span>, password_hash, role, phone, is_active, created_at, updated_at)<br><br>
+
+          <strong class="rel-name">CUSTOMERS</strong> (<span class="pk-attr">customer_id</span>, full_name, <span class="uk-attr">email</span>, phone, address, city, state, zip_code, created_at, updated_at)<br><br>
+
+          <strong class="rel-name">VEHICLE_CATALOGUE</strong> (<span class="pk-attr">catalogue_id</span>, <span class="uk-attr">manufacturer, model, model_year, fuel_code, source_dataset</span>, category, fuel, engine_type, engine_size, engine_cylinders, engine_description, transmission_type, drivetrain, alt_economy_city, alt_economy_hwy, alt_economy_combined, conv_economy_city, conv_economy_hwy, conv_economy_combined, electric_range, phev_total_range, num_passengers, heavy_duty_power_system, source_vehicle_id, notes, created_at)<br><br>
+
+          <strong class="rel-name">CUSTOMER_VEHICLES</strong> (<span class="pk-attr">vehicle_id</span>, <span class="fk-attr">customer_id</span>, <span class="fk-attr">catalogue_id</span>, license_plate, <span class="uk-attr">vin</span>, color, purchase_year, current_odometer, fuel_override, notes, is_active, created_at, updated_at)<br>
+          &nbsp;&nbsp;&bull; Foreign Key: customer_id &rarr; CUSTOMERS(customer_id) [ON DELETE RESTRICT, ON UPDATE CASCADE]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: catalogue_id &rarr; VEHICLE_CATALOGUE(catalogue_id) [ON DELETE SET NULL, ON UPDATE CASCADE]<br><br>
+
+          <strong class="rel-name">SERVICE_TYPES</strong> (<span class="pk-attr">service_type_id</span>, <span class="uk-attr">service_name</span>, description, estimated_duration_mins, base_price, is_active, created_at)<br><br>
+
+          <strong class="rel-name">APPOINTMENTS</strong> (<span class="pk-attr">appointment_id</span>, <span class="fk-attr">customer_id</span>, <span class="fk-attr">vehicle_id</span>, <span class="fk-attr">advisor_id</span>, scheduled_at, status, <span class="fk-attr">service_type_id</span>, mileage_at_booking, customer_notes, advisor_notes, created_at, updated_at)<br>
+          &nbsp;&nbsp;&bull; Foreign Key: customer_id &rarr; CUSTOMERS(customer_id) [ON DELETE RESTRICT]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: vehicle_id &rarr; CUSTOMER_VEHICLES(vehicle_id) [ON DELETE RESTRICT]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: advisor_id &rarr; USERS(user_id) [ON DELETE SET NULL]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: service_type_id &rarr; SERVICE_TYPES(service_type_id) [ON DELETE SET NULL]<br><br>
+
+          <strong class="rel-name">SERVICE_JOBS</strong> (<span class="pk-attr">job_id</span>, <span class="fk-attr">appointment_id</span>, <span class="fk-attr">mechanic_id</span>, <span class="fk-attr">vehicle_id</span>, status, odometer_in, odometer_out, started_at, completed_at, <span class="fk-attr">mongo_report_id</span>, internal_notes, created_at, updated_at)<br>
+          &nbsp;&nbsp;&bull; Foreign Key: appointment_id &rarr; APPOINTMENTS(appointment_id) [ON DELETE SET NULL]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: mechanic_id &rarr; USERS(user_id) [ON DELETE SET NULL]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: vehicle_id &rarr; CUSTOMER_VEHICLES(vehicle_id) [ON DELETE RESTRICT]<br><br>
+
+          <strong class="rel-name">JOB_SERVICES</strong> (<span class="pk-attr">job_service_id</span>, <span class="fk-attr"><span class="uk-attr">job_id</span></span>, <span class="fk-attr"><span class="uk-attr">service_type_id</span></span>, service_price, technician_notes)<br>
+          &nbsp;&nbsp;&bull; Foreign Key: job_id &rarr; SERVICE_JOBS(job_id) [ON DELETE CASCADE]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: service_type_id &rarr; SERVICE_TYPES(service_type_id) [ON DELETE RESTRICT]<br><br>
+
+          <strong class="rel-name">SPARE_PARTS</strong> (<span class="pk-attr">part_id</span>, <span class="uk-attr">part_number</span>, part_name, description, category, brand, unit_cost, selling_price, qty_in_stock, reorder_level, location_code, is_active, created_at, updated_at)<br><br>
+
+          <strong class="rel-name">PART_USAGE</strong> (<span class="pk-attr">usage_id</span>, <span class="fk-attr">job_id</span>, <span class="fk-attr">part_id</span>, qty_used, unit_price_charged, used_at)<br>
+          &nbsp;&nbsp;&bull; Foreign Key: job_id &rarr; SERVICE_JOBS(job_id) [ON DELETE RESTRICT]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: part_id &rarr; SPARE_PARTS(part_id) [ON DELETE RESTRICT]<br><br>
+
+          <strong class="rel-name">INVOICES</strong> (<span class="pk-attr">invoice_id</span>, <span class="fk-attr"><span class="uk-attr">job_id</span></span>, <span class="fk-attr">customer_id</span>, subtotal, tax_rate, tax_amount, discount_amount, total_amount, status, due_date, issued_at, created_at, updated_at)<br>
+          &nbsp;&nbsp;&bull; Foreign Key (1:1): job_id &rarr; SERVICE_JOBS(job_id) [ON DELETE RESTRICT]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: customer_id &rarr; CUSTOMERS(customer_id) [ON DELETE RESTRICT]<br><br>
+
+          <strong class="rel-name">INVOICE_PAYMENTS</strong> (<span class="pk-attr">payment_id</span>, <span class="fk-attr">invoice_id</span>, amount_paid, payment_method, reference_number, paid_at, <span class="fk-attr">recorded_by</span>, notes)<br>
+          &nbsp;&nbsp;&bull; Foreign Key: invoice_id &rarr; INVOICES(invoice_id) [ON DELETE RESTRICT]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: recorded_by &rarr; USERS(user_id) [ON DELETE SET NULL]<br><br>
+
+          <strong class="rel-name">MAINTENANCE_REMINDERS</strong> (<span class="pk-attr">reminder_id</span>, <span class="fk-attr">vehicle_id</span>, <span class="fk-attr">service_type_id</span>, reminder_type, next_service_date, next_service_odometer, interval_km, interval_days, is_sent, is_active, <span class="fk-attr">created_by</span>, created_at, updated_at)<br>
+          &nbsp;&nbsp;&bull; Foreign Key: vehicle_id &rarr; CUSTOMER_VEHICLES(vehicle_id) [ON DELETE CASCADE]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: service_type_id &rarr; SERVICE_TYPES(service_type_id) [ON DELETE SET NULL]<br>
+          &nbsp;&nbsp;&bull; Foreign Key: created_by &rarr; USERS(user_id) [ON DELETE SET NULL]
+        </div>
+      </div>
+
+      <!-- Right Column: Referential Integrity Matrix -->
+      <div class="panel-box">
+        <h3>2. Foreign Key Referential Integrity Specification Matrix</h3>
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Child Table</th>
+              <th>Foreign Key Column</th>
+              <th>Parent Table (PK)</th>
+              <th>On Delete</th>
+              <th>On Update</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>customer_vehicles</td><td>customer_id</td><td>customers(customer_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>2</td><td>customer_vehicles</td><td>catalogue_id</td><td>vehicle_catalogue(catalogue_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+            <tr><td>3</td><td>appointments</td><td>customer_id</td><td>customers(customer_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>4</td><td>appointments</td><td>vehicle_id</td><td>customer_vehicles(vehicle_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>5</td><td>appointments</td><td>advisor_id</td><td>users(user_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+            <tr><td>6</td><td>appointments</td><td>service_type_id</td><td>service_types(service_type_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+            <tr><td>7</td><td>service_jobs</td><td>appointment_id</td><td>appointments(appointment_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+            <tr><td>8</td><td>service_jobs</td><td>mechanic_id</td><td>users(user_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+            <tr><td>9</td><td>service_jobs</td><td>vehicle_id</td><td>customer_vehicles(vehicle_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>10</td><td>job_services</td><td>job_id</td><td>service_jobs(job_id)</td><td><span class="act-cascade">CASCADE</span></td><td>CASCADE</td></tr>
+            <tr><td>11</td><td>job_services</td><td>service_type_id</td><td>service_types(service_type_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>12</td><td>part_usage</td><td>job_id</td><td>service_jobs(job_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>13</td><td>part_usage</td><td>part_id</td><td>spare_parts(part_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>14</td><td>invoices</td><td>job_id (1:1 UK)</td><td>service_jobs(job_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>15</td><td>invoices</td><td>customer_id</td><td>customers(customer_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>16</td><td>invoice_payments</td><td>invoice_id</td><td>invoices(invoice_id)</td><td><span class="act-restrict">RESTRICT</span></td><td>CASCADE</td></tr>
+            <tr><td>17</td><td>invoice_payments</td><td>recorded_by</td><td>users(user_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+            <tr><td>18</td><td>maintenance_reminders</td><td>vehicle_id</td><td>customer_vehicles(vehicle_id)</td><td><span class="act-cascade">CASCADE</span></td><td>CASCADE</td></tr>
+            <tr><td>19</td><td>maintenance_reminders</td><td>service_type_id</td><td>service_types(service_type_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+            <tr><td>20</td><td>maintenance_reminders</td><td>created_by</td><td>users(user_id)</td><td><span class="act-setnull">SET NULL</span></td><td>CASCADE</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
+"""
+
+html_path = os.path.join(docs_dir, 'AutoCare_Insight_Relational_Schema.html')
+with open(html_path, 'w', encoding='utf-8') as f:
+    f.write(html_content)
+print(f"Generated {html_path}")
+
+out_jpegs = [
+    os.path.join(docs_dir, 'AutoCare_Insight_Relational_Schema.jpeg'),
+    os.path.join(docs_dir, 'AutoCare_Insight_Relational_Schema.jpg'),
+    os.path.join(db_dir, 'AutoCare_Insight_Relational_Schema.jpeg'),
+    os.path.join(db_dir, 'AutoCare_Insight_Relational_Schema.jpg'),
+]
+
+success = render_html_to_jpeg(html_path, out_jpegs, width=3800, height=2600)
+print("Relational Schema rendering result:", success)

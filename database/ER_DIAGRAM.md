@@ -1,6 +1,20 @@
-# AutoCare Insight — ER Diagram
+# AutoCare Insight — ER Diagram & Relational Schema
 
-## Entity-Relationship Diagram
+> **High-Resolution Diagrams in JPEG Format:**
+> - 🖼️ **Complete ER Diagram (JPEG):** [database/AutoCare_Insight_ER_Diagram.jpeg](AutoCare_Insight_ER_Diagram.jpeg) (3600 x 2450 px)
+> - 📐 **Relational Schema & Referential Integrity Model (JPEG):** [database/AutoCare_Insight_Relational_Schema.jpeg](AutoCare_Insight_Relational_Schema.jpeg) (3800 x 2600 px)
+
+---
+
+## 1. High-Resolution Visual Diagram Previews
+
+![AutoCare Insight ER Diagram](AutoCare_Insight_ER_Diagram.jpeg)
+
+![AutoCare Insight Relational Schema](AutoCare_Insight_Relational_Schema.jpeg)
+
+---
+
+## 2. Entity-Relationship Diagram (Mermaid Specification)
 
 ```mermaid
 erDiagram
