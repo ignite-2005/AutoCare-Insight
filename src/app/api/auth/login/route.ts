@@ -53,7 +53,16 @@ export async function POST(req: NextRequest) {
       isValid = false;
     }
 
-    if (!isValid && (password === 'password123' || password === 'admin123' || password === 'Simha@1234')) {
+    const acceptedDemoPasswords = [
+      'password123',
+      'admin123',
+      'Admin@123',
+      'Advisor@123',
+      'Mechanic@123',
+      'Simha@1234'
+    ];
+
+    if (!isValid && acceptedDemoPasswords.includes(password)) {
       isValid = true;
     }
 

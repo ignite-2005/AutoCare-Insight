@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { UserRole } from '@/types';
 import {
@@ -21,7 +21,8 @@ import {
   ChevronDown,
   Sparkles,
   Terminal,
-  BarChart3
+  BarChart3,
+  KeyRound
 } from 'lucide-react';
 
 interface NavItem {
@@ -107,10 +108,15 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, switchDemoRole } = useAuth();
+  const { user, loading, logout, switchDemoRole } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+
+  if (pathname === '/login') {
+    return <main className="min-h-screen">{children}</main>;
+  }
 
   const currentRole = user?.role || 'admin';
 
@@ -223,15 +229,36 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 )}
               </div>
 
-              {/* User Avatar */}
-              <div className="hidden sm:flex items-center space-x-2 pl-2 border-l border-slate-200">
-                <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs uppercase">
+              {/* Login Portal Link */}
+              <Link
+                href="/login"
+                className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition shadow-xs"
+                title="Open Dedicated RBAC Login Portal"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-blue-600" />
+                <span>Login Portal</span>
+              </Link>
+
+              {/* User Avatar & Logout */}
+              <div className="flex items-center space-x-2 pl-2 border-l border-slate-200">
+                <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
                   {user?.full_name?.slice(0, 2) || 'AC'}
                 </div>
-                <div className="text-left text-xs">
+                <div className="hidden sm:block text-left text-xs">
                   <div className="font-semibold text-slate-900 leading-none">{user?.full_name || 'Loading...'}</div>
                   <div className="text-[10px] text-slate-500 capitalize">{user?.role?.replace('_', ' ') || 'Demo'}</div>
                 </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await logout();
+                    router.push('/login');
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                  title="Sign out to RBAC Login Portal"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -264,7 +291,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile menu drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 shadow-lg">
-            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Navigation</div>
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Navigation</span>
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center space-x-1 text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>RBAC Portal</span>
+              </Link>
+            </div>
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
