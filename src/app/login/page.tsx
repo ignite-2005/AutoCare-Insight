@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth, DEMO_CREDENTIALS } from '@/lib/context/AuthContext';
+import { useAuth } from '@/lib/context/AuthContext';
 import { UserRole } from '@/types';
 import {
   Shield,
   ShieldCheck,
-  ShieldAlert,
   Wrench,
   KeyRound,
   Mail,
@@ -19,109 +18,133 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  UserCheck,
-  Sparkles,
   Users,
-  Receipt,
-  Terminal,
-  Car
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 
-interface RoleCardInfo {
+interface PresetAccount {
   role: UserRole;
+  label: string;
   name: string;
   email: string;
   password: string;
-  title: string;
-  description: string;
-  badgeColor: string;
+  color: string;
+  badgeBg: string;
   borderColor: string;
   icon: React.ElementType;
-  keyPermissions: string[];
-  restrictions: string[];
+  description: string;
+  allowedFeatures: string[];
+  deniedFeatures: string[];
 }
 
-const ROLE_CARDS: RoleCardInfo[] = [
+const PRESET_ACCOUNTS: PresetAccount[] = [
   {
     role: 'admin',
+    label: 'Administrator',
     name: 'Admin User',
     email: 'admin@autocare.com',
     password: 'password123',
-    title: 'System Administrator',
-    description: 'Executive management authority across all workshop operations, staff, inventory mutations, and financial ledgers.',
-    badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
-    borderColor: 'border-blue-500/30 hover:border-blue-500',
+    color: 'text-blue-400',
+    badgeBg: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    borderColor: 'border-blue-500/40 hover:border-blue-400',
     icon: ShieldCheck,
-    keyPermissions: [
-      'Full Read/Write access to all 13 MySQL tables',
-      'Inventory restock, pricing & catalog mutations',
-      'Invoice creation, discounts & settlement audits',
-      'Execute 20+ analytical queries in SQL Runner',
-      'Access all MongoDB inspection aggregation pipelines'
+    description: 'Executive authority: financial ledgers, inventory restocking, user administration, and raw SQL Query Runner.',
+    allowedFeatures: [
+      'Full access to all 13 MySQL tables',
+      'Inventory restock & parts price overrides',
+      'Invoice generation & settlement audits',
+      'Interactive SQL Query Runner (20 queries)',
+      'MongoDB inspection analytics pipelines'
     ],
-    restrictions: [
-      'None (Superuser privilege level)'
+    deniedFeatures: [
+      'None (Superuser privilege)'
     ]
   },
   {
     role: 'service_advisor',
+    label: 'Service Advisor',
     name: 'Rajesh Kumar',
     email: 'rajesh@autocare.com',
     password: 'password123',
-    title: 'Service Advisor',
-    description: 'Front-desk customer coordinator handling appointment intake, job card creation, and billing settlement.',
-    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    borderColor: 'border-emerald-500/30 hover:border-emerald-500',
+    color: 'text-emerald-400',
+    badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    borderColor: 'border-emerald-500/40 hover:border-emerald-400',
     icon: Users,
-    keyPermissions: [
-      'Schedule customer service appointments',
-      'Create and assign workshop job cards to mechanics',
-      'Generate invoices, calculate GST & collect payments',
-      'Access customer fleet profiles and history',
-      'Run operational SQL queries and reports'
+    description: 'Front-desk intake coordinator: service appointments, assigning mechanics to job cards, and customer invoicing.',
+    allowedFeatures: [
+      'Schedule customer appointments',
+      'Create and dispatch job cards to mechanics',
+      'Issue invoices, calculate 18% GST & record payments',
+      'View customer vehicle fleet history',
+      'Vehicle catalogue & parts inventory viewer'
     ],
-    restrictions: [
-      'Cannot modify system user accounts',
-      'Cannot perform direct inventory reorder overrides'
+    deniedFeatures: [
+      'Cannot execute raw SQL queries in SQL Runner',
+      'Cannot modify system user accounts'
     ]
   },
   {
     role: 'mechanic',
+    label: 'Senior Mechanic',
     name: 'Suresh Mehta',
     email: 'suresh@autocare.com',
     password: 'password123',
-    title: 'Senior Workshop Mechanic',
-    description: 'Hands-on automotive technician responsible for vehicle diagnostics, multi-point inspections, and part installations.',
-    badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
-    borderColor: 'border-amber-500/30 hover:border-amber-500',
+    color: 'text-amber-400',
+    badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    borderColor: 'border-amber-500/40 hover:border-amber-400',
     icon: Wrench,
-    keyPermissions: [
-      'View assigned service jobs and vehicle history',
-      'Update job card progress (assigned -> in_progress -> completed)',
+    description: 'Hands-on technician: job progress updates, polymorphic MongoDB inspection reports, and diagnostic vector search.',
+    allowedFeatures: [
+      'View assigned workshop jobs and vehicle history',
+      'Update job card status (assigned -> in_progress -> completed)',
       'Create polymorphic MongoDB repair & inspection reports',
       'Allocate required spare parts to active jobs',
       'Diagnostic semantic vector similarity search'
     ],
-    restrictions: [
-      'Cannot access or settle customer invoices',
-      'Cannot delete customer or catalogue records',
-      'Cannot access financial executive dashboards'
+    deniedFeatures: [
+      'Forbidden from viewing or settling invoices',
+      'Forbidden from accessing customer billing accounts',
+      'Forbidden from accessing SQL Query Runner'
     ]
   }
 ];
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth();
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'quick' | 'credentials'>('quick');
 
-  const handleManualLogin = async (e: React.FormEvent) => {
+  // Helper to detect role from typed email
+  const detectRoleFromEmail = (inputEmail: string): PresetAccount | null => {
+    const clean = inputEmail.toLowerCase().trim();
+    if (!clean) return null;
+    if (clean === 'admin@autocare.com' || clean.startsWith('admin')) {
+      return PRESET_ACCOUNTS[0]; // Admin
+    }
+    if (clean === 'rajesh@autocare.com' || clean === 'priya@autocare.com' || clean.includes('advisor')) {
+      return PRESET_ACCOUNTS[1]; // Service Advisor
+    }
+    if (clean === 'suresh@autocare.com' || clean === 'anjali@autocare.com' || clean === 'vikram@autocare.com' || clean.includes('mechanic')) {
+      return PRESET_ACCOUNTS[2]; // Mechanic
+    }
+    return null;
+  };
+
+  const detectedAccount = detectRoleFromEmail(email);
+
+  const selectAccountPreset = (preset: PresetAccount) => {
+    setEmail(preset.email);
+    setPassword(preset.password);
+    setErrorMessage(null);
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -136,396 +159,331 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
+      // If user was previously signed in, ensure clean session
+      if (user) {
+        await logout();
+      }
+
       const success = await login(email, password);
       if (success) {
         router.push('/dashboard');
       } else {
-        setErrorMessage('Invalid credentials. Check email and password or use one of the 1-click role buttons below.');
+        setErrorMessage('Authentication failed. Check your email and password, or choose one of the roles below.');
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Login failed. Please verify your connection.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleQuickRoleLogin = async (roleEmail: string, rolePass: string) => {
-    setErrorMessage(null);
-    setIsSubmitting(true);
-    setEmail(roleEmail);
-    setPassword(rolePass);
-
-    try {
-      const success = await login(roleEmail, rolePass);
-      if (success) {
-        router.push('/dashboard');
-      } else {
-        setErrorMessage(`Failed to authenticate as ${roleEmail}.`);
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Authentication error.');
+      setErrorMessage(err.message || 'Login error occurred.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-slate-100 flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 flex flex-col justify-between py-10 px-4 sm:px-6 lg:px-8">
       
-      {/* Top Bar Branding */}
-      <div className="max-w-6xl mx-auto w-full flex items-center justify-between pb-8 border-b border-slate-700/60">
-        <Link href="/dashboard" className="flex items-center space-x-3 group">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-blue-500/30 group-hover:scale-105 transition">
+      {/* Top Header */}
+      <div className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6 border-b border-slate-800">
+        <div className="flex items-center space-x-3">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/30">
             AC
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-2xl font-black tracking-tight text-white">AutoCare Insight</span>
-              <span className="text-xs uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                RBAC Portal
+              <span className="text-xl font-black tracking-tight text-white">AutoCare Insight</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                RBAC Security Portal
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Role-Based Access Control Authentication &bull; PES University Level 3 DBMS
+              Role-Based Access Control &bull; PES University DBMS Experiential Learning Level 3
             </p>
           </div>
-        </Link>
+        </div>
 
         {user && (
-          <div className="flex items-center space-x-3 bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2 text-xs">
-            <UserCheck className="w-4 h-4 text-emerald-400" />
-            <div>
-              <span className="text-slate-400">Signed in as: </span>
-              <strong className="text-white capitalize">{user.full_name} ({user.role.replace('_', ' ')})</strong>
-            </div>
-            <Link
-              href="/dashboard"
-              className="ml-2 inline-flex items-center space-x-1 font-semibold text-blue-400 hover:text-blue-300 underline"
+          <div className="flex items-center space-x-3 bg-slate-800/90 border border-slate-700/80 rounded-xl px-3.5 py-1.5 text-xs">
+            <span className="text-slate-400">Active:</span>
+            <strong className="text-white capitalize font-semibold">{user.full_name} ({user.role.replace('_', ' ')})</strong>
+            <button
+              type="button"
+              onClick={async () => {
+                await logout();
+                setEmail('');
+              }}
+              className="ml-2 flex items-center space-x-1 text-rose-400 hover:text-rose-300 font-semibold"
+              title="Terminate current session"
             >
-              <span>Dashboard</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
+            </button>
           </div>
         )}
       </div>
 
-      {/* Main Content Area */}
-      <div className="max-w-6xl mx-auto w-full my-8">
-        
-        {/* Title Header */}
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Role-Based Access Control (RBAC) Portal
-          </h1>
-          <p className="mt-3 text-slate-400 text-sm leading-relaxed">
-            Select your operational role below to authenticate into the dual-database automotive service management system, or enter specific credentials.
-          </p>
-        </div>
+      {/* Main Container */}
+      <div className="max-w-5xl mx-auto w-full my-6">
 
-        {/* Mode Selector Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex bg-slate-800/80 p-1.5 rounded-xl border border-slate-700">
-            <button
-              type="button"
-              onClick={() => setActiveTab('quick')}
-              className={`flex items-center space-x-2 px-5 py-2 rounded-lg text-sm font-semibold transition ${
-                activeTab === 'quick'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>1-Click Fast Role Sign-In (Evaluation Mode)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('credentials')}
-              className={`flex items-center space-x-2 px-5 py-2 rounded-lg text-sm font-semibold transition ${
-                activeTab === 'credentials'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <KeyRound className="w-4 h-4" />
-              <span>Manual Email & Password Login</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Error Notification */}
-        {errorMessage && (
-          <div className="max-w-xl mx-auto mb-8 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <strong className="font-bold">Authentication Notice: </strong>
-              {errorMessage}
+        {/* Existing Active Session Alert */}
+        {user && (
+          <div className="mb-6 p-4 rounded-xl bg-blue-900/30 border border-blue-500/40 text-blue-200 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <ShieldCheck className="w-6 h-6 text-blue-400 flex-shrink-0" />
+              <div className="text-xs">
+                <div>You are currently signed in as <strong className="text-white">{user.full_name}</strong> with role <strong className="text-blue-300 uppercase">{user.role.replace('_', ' ')}</strong>.</div>
+                <div className="text-slate-400 mt-0.5">Strict role isolation is active. To enter a different role, you must log out first.</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Link
+                href="/dashboard"
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition flex items-center space-x-1"
+              >
+                <span>Go to Dashboard</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <button
+                type="button"
+                onClick={async () => {
+                  await logout();
+                  setEmail('');
+                }}
+                className="px-3.5 py-2 rounded-lg text-xs font-bold bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 transition"
+              >
+                Log Out
+              </button>
             </div>
           </div>
         )}
 
-        {/* TAB 1: 1-Click Role Login Cards */}
-        {activeTab === 'quick' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {ROLE_CARDS.map((card) => {
-              const Icon = card.icon;
-              const isCurrent = user?.role === card.role;
+        {/* Portal Introduction */}
+        <div className="text-center max-w-xl mx-auto mb-8">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Sign In to Your Operational Workspace
+          </h1>
+          <p className="mt-2 text-slate-400 text-xs sm:text-sm leading-relaxed">
+            Enter your email address to unlock your assigned role interface (Administrator, Service Advisor, or Senior Mechanic).
+          </p>
+        </div>
+
+        {/* Primary Email Entry & Login Box */}
+        <div className="max-w-lg mx-auto bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
+          
+          {/* Quick Role Selection Buttons */}
+          <div className="mb-6">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
+              Select or Type Your Role Account
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {PRESET_ACCOUNTS.map((preset) => {
+                const Icon = preset.icon;
+                const isSelected = email.toLowerCase().trim() === preset.email;
+                return (
+                  <button
+                    key={preset.role}
+                    type="button"
+                    onClick={() => selectAccountPreset(preset)}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition ${
+                      isSelected
+                        ? 'bg-slate-800 border-blue-500 ring-2 ring-blue-500/50 shadow-md'
+                        : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 mb-1.5 ${preset.color}`} />
+                    <span className="text-xs font-bold text-white">{preset.label}</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 font-mono">{preset.email.split('@')[0]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start space-x-2.5 text-xs">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong>Authentication Notice: </strong>
+                {errorMessage}
+              </div>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            
+            {/* Email Input */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. admin@autocare.com, rajesh@autocare.com, suresh@autocare.com"
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+
+              {/* Dynamic Live Role Detection Preview */}
+              {detectedAccount ? (
+                <div className="mt-2.5 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-xs">
+                  <span className="text-slate-400">Identified Role:</span>
+                  <span className={`font-bold px-2 py-0.5 rounded text-[11px] border ${detectedAccount.badgeBg}`}>
+                    {detectedAccount.label}
+                  </span>
+                  <span className="text-slate-500 text-[11px] font-mono">({detectedAccount.name})</span>
+                </div>
+              ) : email.includes('@') ? (
+                <div className="mt-2 text-[11px] text-slate-400">
+                  Custom MySQL user account will be verified upon sign-in.
+                </div>
+              ) : null}
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  required
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-600/30 transition flex items-center justify-center space-x-2"
+              >
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>
+                      {detectedAccount
+                        ? `Sign In as ${detectedAccount.label}`
+                        : 'Sign In to Workspace'}
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="text-center pt-2 text-[11px] text-slate-400">
+              Demo accounts use password: <code className="text-blue-400 font-mono font-bold">password123</code>
+            </div>
+
+          </form>
+        </div>
+
+        {/* Role Entitlements & Features Grid */}
+        <div className="mt-12">
+          <div className="text-center mb-6">
+            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+              Enforced Role Segregation (Strict RBAC Model)
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Once authenticated, your interface is locked to that role. You cannot switch roles until you log out.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {PRESET_ACCOUNTS.map((preset) => {
+              const Icon = preset.icon;
               return (
                 <div
-                  key={card.role}
-                  className={`relative rounded-2xl bg-slate-800/90 border-2 p-6 flex flex-col justify-between transition-all duration-200 shadow-xl backdrop-blur-sm ${
-                    card.borderColor
-                  } ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-900' : ''}`}
+                  key={preset.role}
+                  className={`rounded-xl bg-slate-900/70 border p-5 flex flex-col justify-between ${preset.borderColor}`}
                 >
-                  {isCurrent && (
-                    <div className="absolute -top-3 right-4 bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full shadow">
-                      Active Session
-                    </div>
-                  )}
-
                   <div>
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-xl bg-slate-700/60 border border-slate-600/50 text-white">
-                        <Icon className="w-6 h-6 text-blue-400" />
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Icon className={`w-5 h-5 ${preset.color}`} />
+                        <h4 className="text-sm font-bold text-white">{preset.label}</h4>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full border ${card.badgeColor}`}>
-                        {card.role.toUpperCase().replace('_', ' ')}
+                      <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${preset.badgeBg}`}>
+                        {preset.role.replace('_', ' ')}
                       </span>
                     </div>
 
-                    <h3 className="text-lg font-bold text-white">{card.title}</h3>
-                    <div className="text-xs text-blue-400 font-mono mt-0.5">{card.email}</div>
-                    <p className="text-xs text-slate-400 mt-2.5 leading-relaxed">
-                      {card.description}
+                    <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                      {preset.description}
                     </p>
 
-                    {/* Permissions list */}
-                    <div className="mt-5 space-y-2 border-t border-slate-700/60 pt-4">
-                      <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
-                        Authorized Permissions
+                    <div className="space-y-1.5 border-t border-slate-800 pt-3">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Authorized Views &amp; Actions
                       </div>
-                      <ul className="space-y-1.5 text-xs text-slate-300">
-                        {card.keyPermissions.map((perm, idx) => (
-                          <li key={idx} className="flex items-start space-x-2">
+                      <ul className="space-y-1 text-xs text-slate-300">
+                        {preset.allowedFeatures.map((feat, i) => (
+                          <li key={i} className="flex items-start space-x-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                            <span>{perm}</span>
+                            <span>{feat}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    {/* Restrictions list */}
-                    <div className="mt-4 space-y-1.5 border-t border-slate-700/60 pt-3">
-                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                        Enforced Restrictions
+                    <div className="space-y-1 border-t border-slate-800 pt-3 mt-3">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Strict Security Restrictions
                       </div>
                       <ul className="space-y-1 text-xs text-slate-400">
-                        {card.restrictions.map((restr, idx) => (
-                          <li key={idx} className="flex items-start space-x-2">
+                        {preset.deniedFeatures.map((den, i) => (
+                          <li key={i} className="flex items-start space-x-1.5">
                             <XCircle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0 mt-0.5" />
-                            <span>{restr}</span>
+                            <span>{den}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  <div className="mt-6 pt-4 border-t border-slate-700/60">
+                  <div className="mt-4 pt-3 border-t border-slate-800">
                     <button
                       type="button"
-                      disabled={isSubmitting}
-                      onClick={() => handleQuickRoleLogin(card.email, card.password)}
-                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition shadow-lg ${
-                        isCurrent
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white'
-                      }`}
+                      onClick={() => selectAccountPreset(preset)}
+                      className="w-full py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
                     >
-                      <span>{isCurrent ? 'Continue as ' + card.title : 'Sign In as ' + card.title}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      Use {preset.label} Email ({preset.email})
                     </button>
-                    <div className="text-center mt-2 text-[10px] text-slate-500">
-                      Default password: <code className="text-slate-400">{card.password}</code>
-                    </div>
                   </div>
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* TAB 2: Manual Credentials Form */}
-        {activeTab === 'credentials' && (
-          <div className="max-w-md mx-auto bg-slate-800/90 border border-slate-700 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
-            <h2 className="text-xl font-bold text-white mb-2 text-center">Account Sign In</h2>
-            <p className="text-xs text-slate-400 text-center mb-6">
-              Enter the credentials of any pre-seeded user in MySQL <code className="text-blue-400">autocare_insight.users</code>
-            </p>
-
-            <form onSubmit={handleManualLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. admin@autocare.com"
-                    required
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    required
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg transition flex items-center justify-center space-x-2"
-                >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>Authenticate &amp; Open System</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="text-center pt-4 border-t border-slate-700/60">
-                <span className="text-xs text-slate-400">
-                  Tip: Standard demo password for all seeded accounts is{' '}
-                  <code className="text-blue-400 font-mono font-bold">password123</code>
-                </span>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* RBAC Access Matrix Table */}
-        <div className="mt-14 bg-slate-800/80 border border-slate-700 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
-          <div className="flex items-center space-x-3 mb-4">
-            <Shield className="w-5 h-5 text-blue-400" />
-            <h3 className="text-base font-bold text-white">
-              Role-Based Access Control (RBAC) Entitlements Matrix
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 mb-6">
-            The platform enforces server-side route guards, database transaction restrictions, and dynamic UI component filters based on the authenticated session's cryptographic JWT claims.
-          </p>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-700 text-slate-400 uppercase tracking-wider text-[11px]">
-                  <th className="py-3 px-4">System Module / Endpoint</th>
-                  <th className="py-3 px-4 text-center">Administrator</th>
-                  <th className="py-3 px-4 text-center">Service Advisor</th>
-                  <th className="py-3 px-4 text-center">Senior Mechanic</th>
-                  <th className="py-3 px-4">Security Enforcement Level</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/60 text-slate-300">
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">Dashboard &amp; Revenue Analytics</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Full Access (Read/Export)</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Operational View</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-amber-400 font-bold">Work Order View</span></td>
-                  <td className="py-3 px-4 text-slate-400">UI &amp; API Aggregation Filter</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">Service Appointments &amp; Booking</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Manage All</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Manage All</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-slate-400">Read-Only</span></td>
-                  <td className="py-3 px-4 text-slate-400">API Route Guard (`requireRole`)</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">Workshop Job Cards &amp; Progress</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Assign &amp; Reassign</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Create &amp; Dispatch</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Execute &amp; Complete</span></td>
-                  <td className="py-3 px-4 text-slate-400">Database Status State Machine</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">MongoDB Polymorphic Repair Reports</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Audit &amp; Review</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Customer Presentation</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Create Findings</span></td>
-                  <td className="py-3 px-4 text-slate-400">MongoDB JSON Schema Validator</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">Invoices, Tax Calculation &amp; Payments</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Issue &amp; Settle</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Issue &amp; Collect</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-rose-400 font-bold flex items-center justify-center gap-1"><XCircle className="w-3.5 h-3.5" /> Forbidden</span></td>
-                  <td className="py-3 px-4 text-slate-400">Strict HTTP 403 Forbidden</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">Inventory Management &amp; Reordering</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Restock &amp; Pricing</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-slate-400">View Stock Levels</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-amber-400 font-bold">Deduct Consumables</span></td>
-                  <td className="py-3 px-4 text-slate-400">Database Trigger &amp; Stock Guard</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">Interactive SQL Query Runner</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">All 20 Queries</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Operational Queries</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-rose-400 font-bold flex items-center justify-center gap-1"><XCircle className="w-3.5 h-3.5" /> Forbidden</span></td>
-                  <td className="py-3 px-4 text-slate-400">Query Registry RBAC Filter</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-semibold text-white">Diagnostic Vector Similarity Search</td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Full Access</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Full Access</span></td>
-                  <td className="py-3 px-4 text-center"><span className="text-emerald-400 font-bold">Full Access</span></td>
-                  <td className="py-3 px-4 text-slate-400">In-Memory 64D Vector Engine</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
 
       </div>
 
       {/* Footer */}
-      <div className="max-w-6xl mx-auto w-full pt-8 border-t border-slate-700/60 text-center text-xs text-slate-500">
-        AutoCare Insight &bull; PES University Department of Computer Science and Engineering &bull; Database Management Systems (DBMS Level 3)
+      <div className="max-w-5xl mx-auto w-full pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
+        AutoCare Insight &bull; PES University Department of Computer Science &amp; Engineering &bull; DBMS Level 3 Project
       </div>
 
     </div>

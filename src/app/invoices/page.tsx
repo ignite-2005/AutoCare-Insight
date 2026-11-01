@@ -143,7 +143,7 @@ export default function InvoicesPage() {
           Financial accounts and billing ledger records are restricted to <strong>Admin</strong> and <strong>Service Advisor</strong> roles.
         </p>
         <p className="text-[11px] text-slate-400 mt-2">
-          Use the role switcher in the top navigation bar to test as Admin or Service Advisor.
+          To access billing ledgers, click Log Out and sign in as an Administrator or Service Advisor.
         </p>
       </div>
     );

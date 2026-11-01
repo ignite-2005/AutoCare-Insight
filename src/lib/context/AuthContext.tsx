@@ -47,8 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
       }
-      // If no session exists, default to Admin for seamless review/demo
-      await switchDemoRole('admin');
+      // If no valid session exists, set user to null (enforces explicit login)
+      setUser(null);
     } catch {
       setUser(null);
     } finally {

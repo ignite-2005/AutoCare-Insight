@@ -141,6 +141,22 @@ export default function SqlRunnerPage() {
     return matchesCat && matchesSearch;
   });
 
+  // RBAC guard check: strictly Admin only
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="p-12 bg-white rounded-xl border border-slate-200 text-center max-w-lg mx-auto mt-10 shadow-sm">
+        <Terminal className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+        <h2 className="text-base font-bold text-slate-900">Access Restricted to Administrator</h2>
+        <p className="text-xs text-slate-500 mt-2">
+          Direct interactive SQL execution and schema queries are strictly reserved for <strong>Administrator</strong> accounts.
+        </p>
+        <p className="text-[11px] text-slate-400 mt-3">
+          To run analytical SQL queries, log out and sign in with an Administrator account.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -204,7 +220,23 @@ export default function SqlRunnerPage() {
             ) : (
               filteredQueries.map((q) => {
                 const isSelected = q.id === selectedId;
-                return (
+                // RBAC guard check: strictly Admin only
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="p-12 bg-white rounded-xl border border-slate-200 text-center max-w-lg mx-auto mt-10 shadow-sm">
+        <Terminal className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+        <h2 className="text-base font-bold text-slate-900">Access Restricted to Administrator</h2>
+        <p className="text-xs text-slate-500 mt-2">
+          Direct interactive SQL execution and schema queries are strictly reserved for <strong>Administrator</strong> accounts.
+        </p>
+        <p className="text-[11px] text-slate-400 mt-3">
+          To run analytical SQL queries, log out and sign in with an Administrator account.
+        </p>
+      </div>
+    );
+  }
+
+  return (
                   <button
                     key={q.id}
                     onClick={() => setSelectedId(q.id)}
