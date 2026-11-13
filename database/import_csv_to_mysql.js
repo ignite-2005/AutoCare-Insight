@@ -1,3 +1,4 @@
+require('../scripts/env');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
@@ -72,11 +73,25 @@ async function run() {
     host: process.env.MYSQL_HOST || 'localhost',
     port: Number(process.env.MYSQL_PORT) || 3306,
     user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || 'Simha@1234',
+    password: process.env.MYSQL_PASSWORD || '',
     database: process.env.MYSQL_DATABASE || 'autocare_insight'
   });
 
   console.log('Connected successfully!');
+
+  // MySQL unique keys permit repeated NULL values. Match all imported columns
+  // explicitly before inserting so repeat runs do not duplicate AFV/MHD rows.
+  async function insertIfMissing(sql, params) {
+    const match = sql.match(/vehicle_catalogue\s*\(([\s\S]*?)\)\s*VALUES\s*\(([\s\S]*?)\)/i);
+    const columns = match[1].split(',').map(value => value.trim());
+    const tokens = match[2].split(',').map(value => value.trim());
+    let index = 0;
+    const values = tokens.map(token => token === '?' ? params[index++] : token.startsWith("'") ? token.slice(1, -1) : Number(token));
+    const where = columns.map(column => column + ' <=> ?').join(' AND ');
+    const [found] = await conn.execute('SELECT catalogue_id FROM vehicle_catalogue WHERE ' + where + ' LIMIT 1', values);
+    if (found.length) return [{ affectedRows: 0 }];
+    return conn.execute(sql, params);
+  }
 
   const baseDir = path.join(__dirname, '..', 'vehicle_management');
 
@@ -130,7 +145,7 @@ async function run() {
       cleanStr(r['Notes'], 500)
     ];
 
-    const [res] = await conn.execute(sql, params);
+    const [res] = await insertIfMissing(sql, params);
     if (res.affectedRows > 0) ldvInserted++;
   }
   console.log(`Successfully ingested ${ldvInserted} LDV vehicles into vehicle_catalogue.`);
@@ -184,7 +199,7 @@ async function run() {
       cleanStr(r['Notes'], 500)
     ];
 
-    const [res] = await conn.execute(sql, params);
+    const [res] = await insertIfMissing(sql, params);
     if (res.affectedRows > 0) afvInserted++;
   }
   console.log(`Successfully ingested ${afvInserted} AFV vehicles into vehicle_catalogue.`);
@@ -220,7 +235,7 @@ async function run() {
       cleanInt(r['Vehicle ID'])
     ];
 
-    const [res] = await conn.execute(sql, params);
+    const [res] = await insertIfMissing(sql, params);
     if (res.affectedRows > 0) mhdInserted++;
   }
   console.log(`Successfully ingested ${mhdInserted} MHD vehicles into vehicle_catalogue.`);

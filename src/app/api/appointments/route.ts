@@ -1,6 +1,6 @@
 ﻿export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
-import { query, queryOne } from '@/lib/db/mysql';
+import { query, queryOne, getMySqlPool, handleMySqlError } from '@/lib/db/mysql';
 import { requireAuth } from '@/lib/auth/session';
 import { enforcePermission } from '@/lib/auth/rbac';
 import { ValidationError, ConflictError } from '@/lib/db/errors';
@@ -89,46 +89,56 @@ export async function POST(req: NextRequest) {
     // Call stored procedure sp_book_appointment
     const advisorId = user.role === 'service_advisor' ? user.user_id : (body.advisor_id || user.user_id);
 
-    await query(
-      `CALL sp_book_appointment(?, ?, ?, ?, ?, ?, @out_appt_id, @out_msg)`,
-      [
-        Number(customer_id),
-        Number(vehicle_id),
-        Number(advisorId),
-        scheduledDate.toISOString().slice(0, 19).replace('T', ' '),
-        service_type_id ? Number(service_type_id) : null,
-        customer_notes ? String(customer_notes).trim() : null
-      ]
-    );
+    const connection = await getMySqlPool().getConnection();
+    try {
+      const query = async (sql: string, params: any[] = []): Promise<any> => {
+        try { const [rows] = await connection.execute(sql, params); return rows; }
+        catch (error) { return handleMySqlError(error); }
+      };
+      const queryOne = async <T = any>(sql: string, params: any[] = []): Promise<T | null> => {
+        const rows = await query(sql, params); return rows[0] || null;
+      };
+      await query(
+        `CALL sp_book_appointment(?, ?, ?, ?, ?, ?, @out_appt_id, @out_msg)`,
+        [
+          Number(customer_id),
+          Number(vehicle_id),
+          Number(advisorId),
+          scheduledDate.toISOString().slice(0, 19).replace('T', ' '),
+          service_type_id ? Number(service_type_id) : null,
+          customer_notes ? String(customer_notes).trim() : null
+        ]
+      );
 
-    const procResult = await queryOne<any>('SELECT @out_appt_id AS appt_id, @out_msg AS msg');
-    if (!procResult || procResult.appt_id === 0) {
-      const msg = procResult?.msg || 'Could not complete appointment booking';
-      if (msg.includes('already has an appointment')) {
-        throw new ConflictError(msg);
+      const procResult = await queryOne<any>('SELECT @out_appt_id AS appt_id, @out_msg AS msg');
+      if (!procResult || procResult.appt_id === 0) {
+        const msg = procResult?.msg || 'Could not complete appointment booking';
+        if (msg.includes('already has an appointment')) {
+          throw new ConflictError(msg);
+        }
+        throw new ValidationError(msg);
       }
-      throw new ValidationError(msg);
-    }
 
-    const apptId = procResult.appt_id;
+      const apptId = procResult.appt_id;
 
-    if (mileage_at_booking) {
-      await query('UPDATE appointments SET mileage_at_booking = ? WHERE appointment_id = ?', [
-        Number(mileage_at_booking),
-        apptId
-      ]);
-    }
+      if (mileage_at_booking) {
+        await query('UPDATE appointments SET mileage_at_booking = ? WHERE appointment_id = ?', [
+          Number(mileage_at_booking),
+          apptId
+        ]);
+      }
 
-    const created = await queryOne<any>(
-      `SELECT a.*, c.full_name AS customer_name, cv.license_plate
-       FROM appointments a
-       JOIN customers c ON a.customer_id = c.customer_id
-       JOIN customer_vehicles cv ON a.vehicle_id = cv.vehicle_id
-       WHERE a.appointment_id = ?`,
-      [apptId]
-    );
+      const created = await queryOne<any>(
+        `SELECT a.*, c.full_name AS customer_name, cv.license_plate
+         FROM appointments a
+         JOIN customers c ON a.customer_id = c.customer_id
+         JOIN customer_vehicles cv ON a.vehicle_id = cv.vehicle_id
+         WHERE a.appointment_id = ?`,
+        [apptId]
+      );
 
-    return jsonCreated({ appointment: created });
+      return jsonCreated({ appointment: created, appointment_id: apptId });
+    } finally { connection.release(); }
   } catch (error) {
     return handleApiError(error);
   }

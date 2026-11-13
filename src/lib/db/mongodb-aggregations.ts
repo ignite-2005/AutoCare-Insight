@@ -141,7 +141,7 @@ export const MONGO_AGGREGATIONS: Record<string, AggregationDefinition> = {
       {
         $group: {
           _id: {
-            $substr: [{ $ifNull: ['$created_at', '2025-05-01'] }, 0, 7]
+            $substr: [{ $toString: { $ifNull: ['$created_at', '2025-05-01'] } }, 0, 7]
           },
           inspections_completed: { $sum: 1 },
           average_health_score: { $avg: '$overall_health_score' }

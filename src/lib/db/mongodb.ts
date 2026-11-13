@@ -17,6 +17,7 @@ if (process.env.NODE_ENV === 'development') {
   if (!globalWithMongo._mongoClientPromise) {
     const client = new MongoClient(uri, {
       maxPoolSize: 10,
+      ignoreUndefined: true,
       minPoolSize: 2,
       serverSelectionTimeoutMS: 5000
     });
@@ -26,6 +27,7 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   const client = new MongoClient(uri, {
     maxPoolSize: 10,
+      ignoreUndefined: true,
     minPoolSize: 2,
     serverSelectionTimeoutMS: 5000
   });

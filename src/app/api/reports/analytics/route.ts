@@ -59,6 +59,8 @@ export async function GET(req: NextRequest) {
     ]).toArray();
 
     return jsonSuccess({
+      systemBreakdown,
+      healthMetrics: healthMetrics.length > 0 ? healthMetrics[0] : null,
       analytics: {
         system_breakdown: systemBreakdown,
         fleet_health: healthMetrics.length > 0 ? healthMetrics[0] : null

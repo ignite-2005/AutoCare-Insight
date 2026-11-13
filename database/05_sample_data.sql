@@ -7,15 +7,15 @@
 USE autocare_insight;
 
 -- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
--- USERS (password_hash is a bcrypt placeholder â€” real app uses bcrypt)
+-- USERS (password_hash is a bcrypt hash for password123 â€” real app uses bcrypt)
 -- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 INSERT INTO users (full_name, email, password_hash, role, phone) VALUES
-('Admin User',          'admin@autocare.com',   '$2b$10$placeholder_admin_hash',    'admin',           '9800000001'),
-('Rajesh Kumar',        'rajesh@autocare.com',  '$2b$10$placeholder_advisor1_hash', 'service_advisor', '9800000002'),
-('Priya Nair',          'priya@autocare.com',   '$2b$10$placeholder_advisor2_hash', 'service_advisor', '9800000003'),
-('Suresh Mehta',        'suresh@autocare.com',  '$2b$10$placeholder_mech1_hash',    'mechanic',        '9800000004'),
-('Anjali Singh',        'anjali@autocare.com',  '$2b$10$placeholder_mech2_hash',    'mechanic',        '9800000005'),
-('Vikram Patel',        'vikram@autocare.com',  '$2b$10$placeholder_mech3_hash',    'mechanic',        '9800000006');
+('Admin User',          'admin@autocare.com',   '$2a$10$CriofvrdsB5rXLOVIxAb4Om3trInGQ9UiFeB08Ad2u1FETvkRRbza',    'admin',           '9800000001'),
+('Rajesh Kumar',        'rajesh@autocare.com',  '$2a$10$CriofvrdsB5rXLOVIxAb4Om3trInGQ9UiFeB08Ad2u1FETvkRRbza', 'service_advisor', '9800000002'),
+('Priya Nair',          'priya@autocare.com',   '$2a$10$CriofvrdsB5rXLOVIxAb4Om3trInGQ9UiFeB08Ad2u1FETvkRRbza', 'service_advisor', '9800000003'),
+('Suresh Mehta',        'suresh@autocare.com',  '$2a$10$CriofvrdsB5rXLOVIxAb4Om3trInGQ9UiFeB08Ad2u1FETvkRRbza',    'mechanic',        '9800000004'),
+('Anjali Singh',        'anjali@autocare.com',  '$2a$10$CriofvrdsB5rXLOVIxAb4Om3trInGQ9UiFeB08Ad2u1FETvkRRbza',    'mechanic',        '9800000005'),
+('Vikram Patel',        'vikram@autocare.com',  '$2a$10$CriofvrdsB5rXLOVIxAb4Om3trInGQ9UiFeB08Ad2u1FETvkRRbza',    'mechanic',        '9800000006');
 
 
 -- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

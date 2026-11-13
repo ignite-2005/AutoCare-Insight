@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
 
     return jsonSuccess({
       inventory: parts,
+      parts, // Shared shape used by the dashboard and workshop parts picker.
       pagination: { limit, offset, count: parts.length }
     });
   } catch (error) {

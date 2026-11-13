@@ -4,6 +4,7 @@ const path = require('node:path');
 
 const files = [
   path.join(__dirname, 'auth.test.js'),
+  path.join(__dirname, 'intake-photos.test.js'),
   path.join(__dirname, 'validation.test.js'),
   path.join(__dirname, 'integration.test.js'),
   path.join(__dirname, 'sql-runner.test.js'),

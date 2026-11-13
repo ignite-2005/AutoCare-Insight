@@ -45,25 +45,12 @@ export async function POST(req: NextRequest) {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    // Verify password: check bcrypt hash, with standard project demo fallbacks
+    // Verify the stored bcrypt hash. Seed accounts are prepared by setup:db.
     let isValid = false;
     try {
       isValid = await bcrypt.compare(password, user.password_hash);
     } catch {
       isValid = false;
-    }
-
-    const acceptedDemoPasswords = [
-      'password123',
-      'admin123',
-      'Admin@123',
-      'Advisor@123',
-      'Mechanic@123',
-      'Simha@1234'
-    ];
-
-    if (!isValid && acceptedDemoPasswords.includes(password)) {
-      isValid = true;
     }
 
     if (!isValid) {
@@ -91,7 +78,7 @@ export async function POST(req: NextRequest) {
       name: AUTH_COOKIE_NAME,
       value: token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: req.nextUrl.protocol === 'https:',
       sameSite: 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 // 7 days

@@ -1,7 +1,8 @@
 ﻿export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { getRepairReportsCollection } from '@/lib/db/mongodb';
-import { execute } from '@/lib/db/mysql';
+import { execute, queryOne } from '@/lib/db/mysql';
+import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { requireAuth } from '@/lib/auth/session';
 import { enforcePermission } from '@/lib/auth/rbac';
 import { validateRepairReport } from '@/lib/validation/repair-report';
@@ -48,15 +49,23 @@ export async function POST(req: NextRequest) {
 
     const validatedDoc = validateRepairReport(rawBody);
 
+    const job = await queryOne<any>('SELECT job_id, vehicle_id FROM service_jobs WHERE job_id = ?', [validatedDoc.job_id]);
+    if (!job) throw new NotFoundError('Service job not found');
+    if (job.vehicle_id !== validatedDoc.vehicle_id) throw new ValidationError('Vehicle does not match the service job');
     const collection = await getRepairReportsCollection();
-    const insertResult = await collection.insertOne(validatedDoc as any);
+    const insertResult = await collection.insertOne({ ...validatedDoc, created_at: new Date(validatedDoc.created_at) } as any);
     const mongoId = insertResult.insertedId.toString();
 
     // Cross-paradigm integration: update MySQL service_jobs.mongo_report_id
-    await execute(
-      `UPDATE service_jobs SET mongo_report_id = ? WHERE job_id = ?`,
-      [mongoId, validatedDoc.job_id]
-    );
+    try {
+      await execute(
+        `UPDATE service_jobs SET mongo_report_id = ? WHERE job_id = ?`,
+        [mongoId, validatedDoc.job_id]
+      );
+    } catch (error) {
+      await collection.deleteOne({ _id: insertResult.insertedId });
+      throw error;
+    }
 
     return jsonCreated({
       report: {

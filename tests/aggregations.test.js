@@ -1,3 +1,4 @@
+require('../scripts/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MongoClient } = require('mongodb');

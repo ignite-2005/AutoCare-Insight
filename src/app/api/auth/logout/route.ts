@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     name: AUTH_COOKIE_NAME,
     value: '',
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: req.nextUrl.protocol === 'https:',
     sameSite: 'lax',
     path: '/',
     maxAge: 0

@@ -1,0 +1,75 @@
+name: autocare
+x-app: &app
+  build: .
+  environment: &app-env
+    MYSQL_HOST: mysql
+    MYSQL_PORT: 3306
+    MYSQL_USER: autocare
+    MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Set MYSQL_APP_PASSWORD in .env.deploy}
+    MYSQL_DATABASE: autocare_insight
+    MYSQL_CONNECTION_LIMIT: 5
+    MONGODB_URI: mongodb://autocare:${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env.deploy}@mongo:27017/autocare_db?authSource=admin
+    MONGODB_DB_NAME: autocare_db
+    JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env.deploy}
+  depends_on:
+    mysql:
+      condition: service_healthy
+    mongo:
+      condition: service_healthy
+services:
+  web:
+    <<: *app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+  setup:
+    <<: *app
+    profiles: [setup]
+    command: ["npm", "run", "setup:db"]
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: ["--log-bin-trust-function-creators=1"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env.deploy}
+      MYSQL_DATABASE: autocare_insight
+      MYSQL_USER: autocare
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Set MYSQL_APP_PASSWORD in .env.deploy}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysql -uroot -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: autocare
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env.deploy}
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'quit(db.runCommand({ping:1}).ok ? 0 : 1)'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web]
+volumes:
+  mysql_data:
+  mongo_data:
+  caddy_data:
+  caddy_config:

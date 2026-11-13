@@ -11,17 +11,17 @@ export function validateRepairReport(data: any): Omit<MongoRepairReport, '_id'> 
   }
 
   const jobId = Number(data.job_id);
-  if (!jobId || isNaN(jobId) || jobId <= 0) {
+  if (!Number.isInteger(jobId) || jobId <= 0) {
     errors['job_id'] = 'Valid integer job_id is required';
   }
 
   const vehicleId = Number(data.vehicle_id);
-  if (!vehicleId || isNaN(vehicleId) || vehicleId <= 0) {
+  if (!Number.isInteger(vehicleId) || vehicleId <= 0) {
     errors['vehicle_id'] = 'Valid integer vehicle_id is required';
   }
 
   const mechanicId = Number(data.mechanic_id);
-  if (!mechanicId || isNaN(mechanicId) || mechanicId <= 0) {
+  if (!Number.isInteger(mechanicId) || mechanicId <= 0) {
     errors['mechanic_id'] = 'Valid integer mechanic_id is required';
   }
 
@@ -80,9 +80,13 @@ export function validateRepairReport(data: any): Omit<MongoRepairReport, '_id'> 
   let healthScore: number | undefined;
   if (data.overall_health_score !== undefined && data.overall_health_score !== null && data.overall_health_score !== '') {
     healthScore = Number(data.overall_health_score);
-    if (isNaN(healthScore) || healthScore < 0 || healthScore > 100) {
+    if (!Number.isInteger(healthScore) || healthScore < 0 || healthScore > 100) {
       errors['overall_health_score'] = 'Overall health score must be an integer between 0 and 100';
     }
+  }
+
+  if (data.created_at && !Number.isFinite(new Date(data.created_at).getTime())) {
+    errors['created_at'] = 'A valid date is required';
   }
 
   if (Object.keys(errors).length > 0) {

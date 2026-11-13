@@ -1,0 +1,53 @@
+{
+  "contract": "See REVIEW.md: public introduction, sign-in primary action, real app imagery, mobile and desktop fit; workshop preserved.",
+  "targetViewports": [
+    "390x844",
+    "1440x1000"
+  ],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Native links, visible skip-link focus outline, alt descriptions, semantic headings; primary targets >=44px. No animations introduced. Muted body text uses dark green on ivory."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Browser emulation measured innerWidth 390 and 1440 with scrollWidth <= innerWidth. Hero and feature grid fit both captures."
+  },
+  "contentStates": {
+    "loading": {
+      "status": "not-applicable",
+      "reason": "The public introduction is server-rendered static content with bundled images, no async lists, no form submissions, and no session gate."
+    },
+    "empty": {
+      "status": "not-applicable",
+      "reason": "The public introduction is server-rendered static content with bundled images, no async lists, no form submissions, and no session gate."
+    },
+    "error": {
+      "status": "not-applicable",
+      "reason": "The public introduction is server-rendered static content with bundled images, no async lists, no form submissions, and no session gate."
+    },
+    "partial": {
+      "status": "not-applicable",
+      "reason": "The public introduction is server-rendered static content with bundled images, no async lists, no form submissions, and no session gate."
+    },
+    "success": {
+      "status": "pass",
+      "evidence": "Public introduction renders with banner and three real app screenshots."
+    },
+    "permission": {
+      "status": "pass",
+      "evidence": "Root remains accessible without session; jobs API rejects unauthenticated access. Workspace entry points to sign-in."
+    }
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "390x844",
+      "artifact": "mobile.jpg",
+      "observation": "Single-column hero, readable heading, visible workspace action and blueprint; no horizontal overflow."
+    },
+    {
+      "viewport": "1440x1000",
+      "artifact": "desktop.jpg",
+      "observation": "Two-column hero and automotive banner fit desktop; all preview images load."
+    }
+  ]
+}

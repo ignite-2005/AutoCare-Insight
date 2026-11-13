@@ -114,10 +114,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Security enforcement: redirect to /login if unauthenticated and not on /login
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login') {
+    if (!loading && !user && pathname !== '/login' && pathname !== '/') {
       router.push('/login');
     }
   }, [loading, user, pathname, router]);
+
+  // The public introduction never waits for a database-backed session.
+  if (pathname === '/') return <>{children}</>;
 
   // Loading spinner during session verification
   if (loading) {

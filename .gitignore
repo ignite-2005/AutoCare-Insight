@@ -40,3 +40,14 @@ Thumbs.db
 
 __pycache__/
 *.pyc
+
+# Isolated production verification output
+.next-intake-build/
+
+# Deployment secrets
+.env.deploy
+.vercel/
+
+.tools/
+.demo-logs/
+.next-showcase-build/

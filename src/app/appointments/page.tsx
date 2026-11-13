@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { IntakePhotoPicker } from '@/components/ui/IntakePhotoPicker';
+import { IntakePhotoGallery } from '@/components/ui/IntakePhotoGallery';
 import {
   Calendar,
   Plus,
@@ -65,6 +67,20 @@ export default function AppointmentsPage() {
     mileage_at_booking: '',
     customer_notes: '',
   });
+
+  const [intakeFiles, setIntakeFiles] = useState<File[]>([]);
+  const [intakeCaption, setIntakeCaption] = useState('');
+  const [bookingBusy, setBookingBusy] = useState(false);
+  const [bookedId, setBookedId] = useState<number | null>(null);
+  const [photoAppointment, setPhotoAppointment] = useState<Appointment | null>(null);
+  const closeBooking = () => {
+    if (bookingBusy) return;
+    if (bookedId) {
+      setSuccessMsg(`Appointment #${bookedId} is saved. Open Intake photos on its row to add any unsaved photos.`);
+      void fetchAppointments();
+    }
+    setIsBookModalOpen(false); setBookedId(null); setIntakeFiles([]); setIntakeCaption('');
+  };
 
   // Reschedule state
   const [newScheduleDate, setNewScheduleDate] = useState('');
@@ -128,31 +144,40 @@ export default function AppointmentsPage() {
 
   const handleBookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    if (bookingBusy) return;
+    setError(null); setBookingBusy(true);
+    let appointmentId = bookedId;
     try {
-      const res = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_id: Number(formData.customer_id),
-          vehicle_id: Number(formData.vehicle_id),
-          service_type_id: Number(formData.service_type_id),
-          scheduled_at: formData.scheduled_at,
-          mileage_at_booking: formData.mileage_at_booking ? Number(formData.mileage_at_booking) : undefined,
-          customer_notes: formData.customer_notes,
-        }),
-      });
-      const json = await res.json();
-      if (res.ok && json.success) {
-        setIsBookModalOpen(false);
-        setSuccessMsg(`Appointment #${json.data.appointment_id} booked successfully via MySQL Stored Procedure!`);
-        fetchAppointments();
-      } else {
-        setError(json.error?.message || 'Booking failed');
+      if (!appointmentId) {
+        const res = await fetch('/api/appointments', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_id: Number(formData.customer_id), vehicle_id: Number(formData.vehicle_id),
+            service_type_id: Number(formData.service_type_id), scheduled_at: formData.scheduled_at,
+            mileage_at_booking: formData.mileage_at_booking ? Number(formData.mileage_at_booking) : undefined,
+            customer_notes: formData.customer_notes,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.error?.message || 'Booking failed');
+        appointmentId = Number(json.data.appointment_id || json.data.appointment.appointment_id);
+        setBookedId(appointmentId);
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to submit appointment');
-    }
+      if (intakeFiles.length) {
+        const body = new FormData();
+        intakeFiles.forEach(file => body.append('photos', file));
+        body.append('caption', intakeCaption);
+        const res = await fetch(`/api/appointments/${appointmentId}/photos`, { method: 'POST', body });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error?.message || 'Could not save intake photos');
+      }
+      setIsBookModalOpen(false); setBookedId(null); setIntakeFiles([]); setIntakeCaption('');
+      setSuccessMsg(`Appointment #${appointmentId} booked successfully.${intakeFiles.length ? ' Intake photos saved.' : ''}`);
+      void fetchAppointments();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Request failed';
+      setError(appointmentId ? `Appointment #${appointmentId} is already saved. Photos were not confirmed saved: ${message}. Retry saving photos here, or open Intake photos on the appointment. Do not book again.` : message);
+    } finally { setBookingBusy(false); }
   };
 
   const handleConfirm = async (apptId: number) => {
@@ -399,6 +424,7 @@ export default function AppointmentsPage() {
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end space-x-1.5">
+                        <button type="button" onClick={() => setPhotoAppointment(appt)} className="rounded border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">Intake photos</button>
                         {appt.status === 'pending' && user?.role !== 'mechanic' && (
                           <button
                             onClick={() => handleConfirm(appt.appointment_id)}
@@ -456,10 +482,13 @@ export default function AppointmentsPage() {
       {/* Modal: Book Appointment */}
       <Modal
         isOpen={isBookModalOpen}
-        onClose={() => setIsBookModalOpen(false)}
+        onClose={closeBooking}
         title="Book New Service Appointment"
       >
         <form onSubmit={handleBookSubmit} className="space-y-4 text-xs">
+          {error && <div role="alert" className="rounded border border-rose-200 bg-rose-50 p-3 text-rose-700">{error}</div>}
+          {bookedId && <p role="status" className="rounded border border-blue-200 bg-blue-50 p-3 text-blue-700">Appointment #{bookedId} is saved. Retry uploads below; a second appointment will not be created.</p>}
+          <fieldset disabled={bookingBusy || bookedId !== null} className="space-y-4">
           <div>
             <label className="block font-semibold text-slate-700 mb-1">Select Customer *</label>
             <select
@@ -551,6 +580,11 @@ export default function AppointmentsPage() {
             />
           </div>
 
+          </fieldset>
+          <IntakePhotoPicker files={intakeFiles} onChange={setIntakeFiles} disabled={bookingBusy} />
+          <label className="block font-semibold text-slate-700">Intake condition note (optional)
+            <input value={intakeCaption} onChange={e => setIntakeCaption(e.target.value)} maxLength={250} disabled={bookingBusy} placeholder="e.g. Existing scratch on rear-left door" className="mt-1 w-full rounded border border-slate-200 bg-slate-50 p-2" />
+          </label>
           <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-[11px] text-blue-700">
             <strong>Stored Procedure Integration:</strong> This triggers MySQL <code className="font-mono">sp_book_appointment</code> which verifies no conflicting active appointment exists for the same vehicle before committing.
           </div>
@@ -558,19 +592,24 @@ export default function AppointmentsPage() {
           <div className="flex items-center justify-end space-x-2 pt-2">
             <button
               type="button"
-              onClick={() => setIsBookModalOpen(false)}
+              onClick={closeBooking}
               className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
             >
               Cancel
             </button>
             <button
               type="submit"
+              disabled={bookingBusy}
               className="px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
             >
-              Confirm Booking
+              {bookingBusy ? 'Saving...' : bookedId ? 'Retry saving photos' : 'Confirm Booking'}
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={photoAppointment !== null} onClose={() => setPhotoAppointment(null)} title={`Intake photos ? Appointment #${photoAppointment?.appointment_id} ? ${photoAppointment?.license_plate || ''}`} maxWidth="max-w-3xl">
+        {photoAppointment && <IntakePhotoGallery key={photoAppointment.appointment_id} appointmentId={photoAppointment.appointment_id} canUpload={user?.role !== 'mechanic' && ['pending', 'confirmed'].includes(photoAppointment.status)} />}
       </Modal>
 
       {/* Modal: Reschedule */}

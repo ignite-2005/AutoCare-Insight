@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
 
     return jsonSuccess({
       catalogue: items,
+      vehicles: items, // Catalogue page and vehicle registration picker.
       pagination: { limit, offset, count: items.length }
     });
   } catch (error) {
