@@ -6,7 +6,7 @@ import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonSuccess } from '@/lib/utils/api-response';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'view_appointments');
 
-    const appointmentId = Number(params.id);
+    const appointmentId = Number((await params).id);
     if (!appointmentId || isNaN(appointmentId)) {
       throw new ValidationError('Invalid appointment ID');
     }
@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'manage_appointments');
 
-    const appointmentId = Number(params.id);
+    const appointmentId = Number((await params).id);
     if (!appointmentId || isNaN(appointmentId)) {
       throw new ValidationError('Invalid appointment ID');
     }
@@ -97,7 +97,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'manage_appointments');
 
-    const appointmentId = Number(params.id);
+    const appointmentId = Number((await params).id);
     if (!appointmentId || isNaN(appointmentId)) {
       throw new ValidationError('Invalid appointment ID');
     }

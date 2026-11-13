@@ -1,5 +1,11 @@
 ﻿# Deployment without a paid service
 
+## Cloud hosting independent of your PC
+
+The current direction is [Vercel Hobby with independent cloud MySQL and MongoDB services](../deploy/MANAGED_HOSTING.md). AutoCare now has its own Vercel Hobby project and Atlas M0 cluster. The patched protected cloud build passed; the complete database-backed public release is still pending database access, MySQL validation and migration. Student credits are not required for this route.
+
+Both MySQL and MongoDB must move to cloud resources alongside the application. The old PC-hosted tunnel was stopped after a confirmed Next.js Windows vulnerability was found. The application has been upgraded to patched Next.js 15.5.29; do not restart an old Next.js 14 build.
+
 ## No account, no card: public demo from your PC
 
 This route runs the **whole application**, with the existing MySQL and MongoDB services on this computer. Cloudflare supplies a temporary HTTPS URL. It does not move your databases into a cloud service.
@@ -48,4 +54,4 @@ Hosting research on 13 November 2026:
 - [MongoDB Atlas Free](https://www.mongodb.com/docs/atlas/reference/free-shared-limitations/) covers a document store only.
 - [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) can provide a suitable VM when available, but account verification conflicts with the user's no-card requirement.
 
-The selected immediate route is therefore a **temporary public demo hosted on your own PC**. Permanent, unattended, no-card cloud hosting for the unchanged full stack has not been established. Do not describe a local tunnel as a permanent cloud deployment.
+The original immediate route was a **temporary public demo hosted on your own PC**. The managed hosting route above is being prepared to remove that dependency. Do not describe a local tunnel, a protected web build, or an empty database cluster as a completed independent deployment.

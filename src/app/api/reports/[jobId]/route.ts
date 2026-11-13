@@ -6,7 +6,7 @@ import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonSuccess } from '@/lib/utils/api-response';
 
 interface RouteContext {
-  params: { jobId: string };
+  params: Promise<{ jobId: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'view_reports');
 
-    const jobId = Number(params.jobId);
+    const jobId = Number((await params).jobId);
     if (!jobId || isNaN(jobId)) {
       throw new ValidationError('Invalid job ID');
     }
@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'create_reports');
 
-    const jobId = Number(params.jobId);
+    const jobId = Number((await params).jobId);
     if (!jobId || isNaN(jobId)) {
       throw new ValidationError('Invalid job ID');
     }

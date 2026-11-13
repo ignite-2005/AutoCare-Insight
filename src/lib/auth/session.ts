@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { AuthenticatedUser } from './rbac';
 import { UnauthorizedError } from '../db/errors';
+import { getSigningSecret } from './signing-secret';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'autocare_secret_key_pes_cse_2026';
 export const AUTH_COOKIE_NAME = 'autocare_token';
 
 // In-memory sliding window rate limiter for login protection
@@ -38,14 +38,14 @@ export function createSessionToken(user: AuthenticatedUser): string {
       full_name: user.full_name,
       role: user.role
     },
-    JWT_SECRET,
+    getSigningSecret(),
     { expiresIn: '7d' }
   );
 }
 
 export function verifySessionToken(token: string): AuthenticatedUser | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, getSigningSecret()) as any;
     if (!decoded || !decoded.user_id || !decoded.role) {
       return null;
     }

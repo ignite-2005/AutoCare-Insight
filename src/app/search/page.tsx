@@ -237,7 +237,7 @@ export default function SemanticSearchPage() {
                     {item.severity} Severity
                   </span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">
-                    {item.source === 'knowledge_base' ? 'Knowledge Base' : `MongoDB Report #${item.jobId}`}
+                    {item.source === 'knowledge_base' ? 'Knowledge Base' : `Inspection report #${item.jobId}`}
                   </span>
                 </div>
 

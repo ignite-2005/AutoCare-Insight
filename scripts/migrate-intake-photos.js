@@ -1,11 +1,13 @@
 ﻿require('./env');
 const fs = require('fs');
 const path = require('path');
+const { mysqlTlsOptions } = require('../src/lib/db/mysql-tls');
 async function main() {
   const connection = await require('mysql2/promise').createConnection({
     host: process.env.MYSQL_HOST || 'localhost', port: Number(process.env.MYSQL_PORT || 3306),
     user: process.env.MYSQL_USER || 'root', password: process.env.MYSQL_PASSWORD || '',
     database: process.env.MYSQL_DATABASE || 'autocare_insight',
+    ...mysqlTlsOptions(),
   });
   try {
     await connection.query(fs.readFileSync(path.join(__dirname, '../database/09_appointment_intake_photos.sql'), 'utf8').replace(/^\uFEFF/, ''));

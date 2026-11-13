@@ -2,8 +2,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User, UserRole } from '../types';
 import { initialUsers } from './seed-data';
+import { getSigningSecret } from './auth/signing-secret';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'autocare_secret_key_2026_pes_univ';
 
 export interface TokenPayload {
   user_id: number;
@@ -13,12 +13,12 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, getSigningSecret(), { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, getSigningSecret()) as TokenPayload;
   } catch {
     return null;
   }

@@ -308,7 +308,7 @@ export default function MongoAggregationsPage() {
                   No records returned for this aggregation query.
                 </div>
               ) : activeTab === 'table' ? (
-                <div className="overflow-x-auto text-xs">
+                <div className="overflow-x-auto text-xs" tabIndex={0} role="region" aria-label="Scrollable results">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">

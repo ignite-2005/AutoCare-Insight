@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
 import { requireAuth } from '@/lib/auth/session';
 import { enforcePermission } from '@/lib/auth/rbac';
@@ -10,7 +10,7 @@ import { MAX_BATCH_BYTES, MAX_INTAKE_PHOTOS, positiveId, readPhotoForm, validate
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-interface Context { params: { id: string } }
+interface Context { params: Promise<{ id: string }> }
 
 async function listPhotos(id: number) {
   const photos = await query<any>(`SELECT photo_id, original_name, caption, mime_type, byte_size, sha256, uploaded_at, uploaded_by
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: Context) {
   try {
     const user = requireAuth(req);
     enforcePermission(user, 'view_appointments');
-    const id = positiveId(params.id);
+    const id = positiveId((await params).id);
     if (!await queryOne('SELECT appointment_id FROM appointments WHERE appointment_id = ?', [id])) throw new NotFoundError('Appointment not found');
     const response = jsonSuccess({ photos: await listPhotos(id) });
     response.headers.set('Cache-Control', 'private, no-store');
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: Context) {
   try {
     const user = requireAuth(req);
     enforcePermission(user, 'manage_appointments');
-    const id = positiveId(params.id);
+    const id = positiveId((await params).id);
     // Require same-origin requests for a state-changing cookie-authenticated upload.
     const origin = req.headers.get('origin');
     if (origin && origin !== req.nextUrl.origin) throw new ValidationError('Invalid upload origin');

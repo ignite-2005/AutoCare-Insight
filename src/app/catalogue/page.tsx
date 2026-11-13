@@ -165,7 +165,7 @@ export default function VehicleCataloguePage() {
       {loading ? (
         <div className="p-16 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200 shadow-sm">
           <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
-          Loading vehicle specifications from MySQL catalogue table...
+          Loading vehicle specifications…
         </div>
       ) : vehicles.length === 0 ? (
         <div className="p-16 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -344,7 +344,7 @@ export default function VehicleCataloguePage() {
         title="Side-by-Side Technical Comparison"
         maxWidth="max-w-4xl"
       >
-        <div className="overflow-x-auto text-xs">
+        <div className="overflow-x-auto text-xs" tabIndex={0} role="region" aria-label="Scrollable results">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-slate-200">

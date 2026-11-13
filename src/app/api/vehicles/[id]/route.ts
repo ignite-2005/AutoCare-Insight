@@ -6,7 +6,7 @@ import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonSuccess } from '@/lib/utils/api-response';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'view_vehicles');
 
-    const vehicleId = Number(params.id);
+    const vehicleId = Number((await params).id);
     if (!vehicleId || isNaN(vehicleId)) {
       throw new ValidationError('Invalid vehicle ID');
     }
@@ -46,7 +46,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'manage_vehicles');
 
-    const vehicleId = Number(params.id);
+    const vehicleId = Number((await params).id);
     if (!vehicleId || isNaN(vehicleId)) {
       throw new ValidationError('Invalid vehicle ID');
     }

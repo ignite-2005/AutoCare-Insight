@@ -390,7 +390,7 @@ export default function SqlRunnerPage() {
                   No records returned. Click &ldquo;Run Query&rdquo; to execute.
                 </div>
               ) : (
-                <div className="overflow-x-auto text-xs max-h-[500px]">
+                <div className="overflow-x-auto text-xs max-h-[500px]" tabIndex={0} role="region" aria-label="Scrollable results">
                   <table className="w-full text-left border-collapse">
                     <thead className="sticky top-0 bg-slate-100 z-10">
                       <tr className="border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">

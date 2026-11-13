@@ -196,7 +196,7 @@ export default function InventoryPage() {
             Spare Parts Inventory & Stock Control
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Automated stock deduction, reorder threshold triggers, and workshop bin location management.
+            Track available parts, reorder levels and workshop storage locations.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -295,14 +295,14 @@ export default function InventoryPage() {
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-500">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
-            Loading spare parts from MySQL database...
+            Loading parts and stock levels…
           </div>
         ) : parts.length === 0 ? (
           <div className="p-12 text-center text-xs text-slate-500">
             No spare parts found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable results">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">

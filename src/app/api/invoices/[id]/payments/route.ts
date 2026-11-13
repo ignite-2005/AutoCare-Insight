@@ -6,7 +6,7 @@ import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonCreated } from '@/lib/utils/api-response';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const VALID_METHODS = ['cash', 'card', 'upi', 'bank_transfer', 'cheque', 'other'] as const;
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'record_payments');
 
-    const invoiceId = Number(params.id);
+    const invoiceId = Number((await params).id);
     if (!invoiceId || isNaN(invoiceId)) {
       throw new ValidationError('Invalid invoice ID');
     }

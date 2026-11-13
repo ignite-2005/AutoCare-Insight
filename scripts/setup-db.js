@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const mysql = require('mysql2/promise');
+const { mysqlTlsOptions } = require('../src/lib/db/mysql-tls');
 const { MongoClient } = require('mongodb');
 const { spawnSync } = require('child_process');
 const root = path.join(__dirname, '..');
@@ -70,6 +71,7 @@ async function main() {
   const connection = await mysql.createConnection({
     host: process.env.MYSQL_HOST || '127.0.0.1', port: Number(process.env.MYSQL_PORT || 3306),
     user: process.env.MYSQL_USER || 'root', password: process.env.MYSQL_PASSWORD || '', connectTimeout: 5000,
+    ...mysqlTlsOptions(),
   });
   try {
     await connection.query('CREATE DATABASE IF NOT EXISTS autocare_insight CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');

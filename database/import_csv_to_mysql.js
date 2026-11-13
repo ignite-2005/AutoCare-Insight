@@ -2,6 +2,7 @@ require('../scripts/env');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const { mysqlTlsOptions } = require('../src/lib/db/mysql-tls');
 
 // Parse a single CSV line with support for quoted strings containing commas
 function parseCsvLine(line) {
@@ -74,7 +75,8 @@ async function run() {
     port: Number(process.env.MYSQL_PORT) || 3306,
     user: process.env.MYSQL_USER || 'root',
     password: process.env.MYSQL_PASSWORD || '',
-    database: process.env.MYSQL_DATABASE || 'autocare_insight'
+    database: process.env.MYSQL_DATABASE || 'autocare_insight',
+    ...mysqlTlsOptions(),
   });
 
   console.log('Connected successfully!');

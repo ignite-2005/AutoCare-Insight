@@ -4,12 +4,12 @@ import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonSuccess } from '@/lib/utils/api-response';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
-    const catalogueId = Number(params.id);
+    const catalogueId = Number((await params).id);
     if (!catalogueId || isNaN(catalogueId)) {
       throw new ValidationError('Invalid catalogue ID');
     }

@@ -1,28 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { UserRole } from '@/types';
-import {
-  LayoutDashboard,
-  Calendar,
-  Wrench,
-  ClipboardCheck,
-  Car,
-  Package,
-  Receipt,
-  Users,
-  ShieldCheck,
-  Menu,
-  X,
-  LogOut,
-  Sparkles,
-  Terminal,
-  BarChart3,
-  Lock
-} from 'lucide-react';
+import { PageTransition } from '@/components/motion/SiteMotion';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LayoutDashboard, Calendar, Wrench, ClipboardCheck, Car, Package, Receipt, Users, ShieldCheck, Menu, X, LogOut, Sparkles, Terminal, BarChart3, ArrowUpRight } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -111,216 +96,72 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const isPublic = pathname === '/' || pathname === '/login' || pathname === '/design-review';
 
-  // Security enforcement: redirect to /login if unauthenticated and not on /login
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login' && pathname !== '/') {
-      router.push('/login');
-    }
-  }, [loading, user, pathname, router]);
+    if (!loading && !user && !isPublic) router.replace('/login');
+  }, [loading, user, isPublic, router]);
 
-  // The public introduction never waits for a database-backed session.
-  if (pathname === '/') return <>{children}</>;
+  useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 801px)');
+    const closeOnDesktop = () => { if (desktop.matches) setMobileMenuOpen(false); };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, []);
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previous = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const content = document.querySelector('.workspace-body');
+    content?.setAttribute('inert', '');
+    const focusable = () => Array.from(sidebarRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') || []).filter(element => element.getClientRects().length > 0);
+    focusable()[0]?.focus();
+    document.body.style.overflow = 'hidden';
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); setMobileMenuOpen(false); }
+      if (event.key !== 'Tab') return;
+      const elements = focusable();
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', escape);
+    return () => { document.body.style.overflow = previous; content?.removeAttribute('inert'); document.removeEventListener('keydown', escape); if (previousFocus?.isConnected) previousFocus.focus(); };
+  }, [mobileMenuOpen]);
 
-  // Loading spinner during session verification
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-300">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xs font-semibold tracking-wider uppercase text-slate-400">Verifying RBAC Session...</p>
-      </div>
-    );
-  }
+  if (isPublic) return <>{children}</>;
+  if (loading) return <main className="session-loading" aria-live="polite"><Wrench size={32} /><h1>Opening your workspace</h1><p>Checking your session…</p></main>;
+  if (!user) return null;
 
-  // Standalone layout for Login Portal
-  if (pathname === '/login') {
-    return <main className="min-h-screen">{children}</main>;
-  }
-
-  // Prevent rendering protected content before redirect
-  if (!user) {
-    return null;
-  }
-
-  const currentRole = user.role;
-  const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
+  const visibleItems = NAV_ITEMS.filter(item => item.roles.includes(user.role));
+  const current = NAV_ITEMS.find(item => item.href === pathname);
+  const role = user.role === 'admin' ? 'Administrator' : user.role === 'mechanic' ? 'Mechanic' : 'Service advisor';
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            
-            {/* Left brand & mobile hamburger */}
-            <div className="flex items-center space-x-3">
-              <button
-                type="button"
-                className="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle navigation"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-
-              <Link href="/dashboard" className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-xl shadow-md shadow-blue-500/20">
-                  AC
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg font-bold text-slate-900 tracking-tight">AutoCare Insight</span>
-                    <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                      Level 3 DBMS
-                    </span>
-                  </div>
-                  <span className="hidden sm:block text-xs text-slate-500 font-medium">
-                    Dual-Database Vehicle Service & Predictive Analytics
-                  </span>
-                </div>
-              </Link>
-            </div>
-
-            {/* Right actions: Locked Role Indicator & User Profile & Log Out */}
-            <div className="flex items-center space-x-3">
-              
-              {/* FIXED / LOCKED ROLE INDICATOR (Strict RBAC - No dropdown switcher) */}
-              <div className="flex items-center select-none" title={`Authenticated as ${currentRole.replace('_', ' ')}. Role is locked to session.`}>
-                {currentRole === 'admin' && (
-                  <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-xs">
-                    <ShieldCheck className="w-4 h-4 text-blue-600" />
-                    <span>Administrator</span>
-                    <Lock className="w-3 h-3 text-blue-400 ml-1" />
-                  </div>
-                )}
-                {currentRole === 'service_advisor' && (
-                  <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-                    <Users className="w-4 h-4 text-emerald-600" />
-                    <span>Service Advisor</span>
-                    <Lock className="w-3 h-3 text-emerald-400 ml-1" />
-                  </div>
-                )}
-                {currentRole === 'mechanic' && (
-                  <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-xs">
-                    <Wrench className="w-4 h-4 text-amber-600" />
-                    <span>Mechanic</span>
-                    <Lock className="w-3 h-3 text-amber-400 ml-1" />
-                  </div>
-                )}
-              </div>
-
-              {/* User Avatar */}
-              <div className="hidden sm:flex items-center space-x-2 pl-2 border-l border-slate-200">
-                <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
-                  {user.full_name?.slice(0, 2) || 'AC'}
-                </div>
-                <div className="text-left text-xs">
-                  <div className="font-semibold text-slate-900 leading-none">{user.full_name}</div>
-                  <div className="text-[10px] text-slate-500">{user.email}</div>
-                </div>
-              </div>
-
-              {/* Explicit Log Out Button */}
-              <button
-                type="button"
-                onClick={async () => {
-                  await logout();
-                  router.push('/login');
-                }}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition shadow-xs"
-                title="Log out of this role and switch accounts"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Log Out</span>
-              </button>
-
-            </div>
-          </div>
-        </div>
-
-        {/* Sub-header Navigation for desktop (Role-filtered) */}
-        <nav className="hidden md:flex border-t border-slate-100 bg-slate-50/80 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto w-full flex space-x-1 py-1.5 overflow-x-auto">
-            {visibleNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </div>
+    <div className="workspace" data-area={pathname.split('/')[1]}>
+      <a href="#workspace-main" className="skip-link">Skip to workspace</a>
+      {mobileMenuOpen && <button type="button" className="sidebar-scrim" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)} />}
+      <aside ref={sidebarRef} id="workspace-navigation" className={`workspace-sidebar ${mobileMenuOpen ? 'is-open' : ''}`} aria-label="Workspace navigation">
+        <div className="sidebar-brand-row"><Link href="/" className="brand-lockup"><span className="brand-symbol" aria-hidden="true">A<span>↗</span></span><span>AutoCare <strong>Insight</strong><small>WORKSHOP INTELLIGENCE</small></span></Link><button type="button" className="icon-button mobile-only" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)}><X size={20} /></button></div>
+        <nav aria-label="Main workspace">
+          {['Operations', 'Insights & data'].map((group, index) => <div className="nav-group" key={group}><p>{group}</p>{visibleItems.filter(item => index === 0 ? !['/sql-runner', '/aggregations', '/search', '/catalogue'].includes(item.href) : ['/sql-runner', '/aggregations', '/search', '/catalogue'].includes(item.href)).map(item => {
+            const Icon = item.icon;
+            return <Link key={item.href} href={item.href} data-area={item.href.slice(1)} className={`sidebar-link ${pathname === item.href ? 'is-active' : ''}`} aria-current={pathname === item.href ? 'page' : undefined}><Icon size={18} /><span>{item.name.replace('Spare Parts Inventory', 'Parts & inventory').replace('Registered Vehicles', 'Vehicles').replace('Invoices & Billing', 'Invoices & billing')}</span></Link>;
+          })}</div>)}
         </nav>
-
-        {/* Mobile menu drawer */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 shadow-lg">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                {currentRole.replace('_', ' ').toUpperCase()} NAVIGATION
-              </span>
-              <button
-                type="button"
-                onClick={async () => {
-                  setMobileMenuOpen(false);
-                  await logout();
-                  router.push('/login');
-                }}
-                className="flex items-center space-x-1 text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-md"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Log Out</span>
-              </button>
-            </div>
-            {visibleNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                    isActive ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </header>
-
-      {/* Main Page Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {children}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
-          <div>AutoCare Insight &copy; 2026 PES University &bull; Experiential Learning Level 3</div>
-          <div className="flex items-center space-x-4 text-slate-400">
-            <span>MySQL 8.0</span>
-            <span>&bull;</span>
-            <span>MongoDB 8.2</span>
-            <span>&bull;</span>
-            <span>Next.js 14 App Router</span>
-          </div>
-        </div>
-      </footer>
+        <div className="sidebar-bottom"><div className="sidebar-account"><span className="account-avatar">{user.full_name?.slice(0, 2).toUpperCase() || 'AC'}</span><div><strong>{user.full_name}</strong><span>{role}</span></div></div><button type="button" className="sidebar-signout" onClick={async () => { await logout(); router.push('/login'); }}><LogOut size={16} /> Sign out</button></div>
+      </aside>
+      <div className="workspace-body">
+        <header className="workspace-topbar">
+          <div className="workspace-breadcrumb"><button type="button" className="icon-button mobile-only" aria-label="Open navigation" aria-expanded={mobileMenuOpen} aria-controls="workspace-navigation" onClick={() => setMobileMenuOpen(true)}><Menu size={21} /></button><span>Workspace</span><span className="breadcrumb-divider">/</span><strong>{current?.name || 'Overview'}</strong></div>
+          <div className="workspace-topbar-actions"><span className="role-label"><ShieldCheck size={14} />{role}</span><ThemeToggle /><Link href="/" className="icon-button" aria-label="View product introduction" title="Product introduction"><ArrowUpRight size={18} /></Link></div>
+        </header>
+        <main id="workspace-main" className="workspace-main"><PageTransition route={pathname}>{children}</PageTransition></main>
+        <footer className="workspace-footer"><span>AutoCare Insight <span className="footer-dot">/</span> Vehicle service, connected.</span><span>PES University · DBMS Project</span></footer>
+      </div>
     </div>
   );
 }

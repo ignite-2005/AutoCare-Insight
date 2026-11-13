@@ -6,7 +6,7 @@ import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonSuccess } from '@/lib/utils/api-response';
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'view_inventory');
 
-    const partId = Number(params.id);
+    const partId = Number((await params).id);
     if (!partId || isNaN(partId)) {
       throw new ValidationError('Invalid part ID');
     }
@@ -41,7 +41,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     const user = requireAuth(req);
     enforcePermission(user, 'manage_inventory');
 
-    const partId = Number(params.id);
+    const partId = Number((await params).id);
     if (!partId || isNaN(partId)) {
       throw new ValidationError('Invalid part ID');
     }

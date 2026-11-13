@@ -1,10 +1,13 @@
 import mysql, { Pool, PoolConnection, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { DatabaseError, ConflictError, ValidationError } from './errors';
+import { mysqlTlsOptions } from './mysql-tls';
 
-let pool: Pool | null = null;
+// Next.js reloads route modules during development. Keep one pool per process,
+// rather than abandoning open connections whenever a module is re-evaluated.
+const globalWithMySql = globalThis as typeof globalThis & { _autoCareMySqlPool?: Pool };
 
 export function getMySqlPool(): Pool {
-  if (!pool) {
+  if (!globalWithMySql._autoCareMySqlPool) {
     const host = process.env.MYSQL_HOST || 'localhost';
     const port = Number(process.env.MYSQL_PORT) || 3306;
     const user = process.env.MYSQL_USER || 'root';
@@ -12,7 +15,7 @@ export function getMySqlPool(): Pool {
     const database = process.env.MYSQL_DATABASE || 'autocare_insight';
     const connectionLimit = Number(process.env.MYSQL_CONNECTION_LIMIT) || 10;
 
-    pool = mysql.createPool({
+    globalWithMySql._autoCareMySqlPool = mysql.createPool({
       host,
       port,
       user,
@@ -23,10 +26,11 @@ export function getMySqlPool(): Pool {
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 10000,
-      namedPlaceholders: true
+      namedPlaceholders: true,
+      ...mysqlTlsOptions(),
     });
   }
-  return pool;
+  return globalWithMySql._autoCareMySqlPool;
 }
 
 export function handleMySqlError(err: any): never {

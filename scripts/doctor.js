@@ -1,5 +1,6 @@
 require('./env');
 const mysql = require('mysql2/promise');
+const { mysqlTlsOptions } = require('../src/lib/db/mysql-tls');
 const { MongoClient } = require('mongodb');
 
 async function main() {
@@ -13,6 +14,7 @@ async function main() {
       password: process.env.MYSQL_PASSWORD || '',
       database: process.env.MYSQL_DATABASE || 'autocare_insight',
       connectTimeout: 5000,
+      ...mysqlTlsOptions(),
     });
     const [tables] = await connection.query('SHOW TABLES');
     const [counts] = await connection.query('SELECT (SELECT COUNT(*) FROM users) users, (SELECT COUNT(*) FROM vehicle_catalogue) catalogue');

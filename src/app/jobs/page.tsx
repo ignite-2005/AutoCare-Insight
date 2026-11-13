@@ -188,7 +188,7 @@ export default function WorkshopJobsPage() {
       });
       const json = await res.json();
       if (res.ok && json.success) {
-        setSuccessMsg(`Part allocated! MySQL trigger trg_deduct_stock_on_part_usage deducted inventory.`);
+        setSuccessMsg(`Part allocated. Inventory stock has been updated.`);
         // Reload parts for this job
         const pRes = await fetch(`/api/jobs/${selectedJob.job_id}/parts`);
         if (pRes.ok) {
@@ -247,7 +247,7 @@ export default function WorkshopJobsPage() {
             Workshop Bay & Service Jobs
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Track technician execution, allocate spare parts with trigger-based stock deduction, and generate invoices.
+            Track service progress, manage parts and keep every repair moving toward handover.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -318,7 +318,7 @@ export default function WorkshopJobsPage() {
             No service jobs found matching the selected filter.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable results">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
@@ -396,7 +396,7 @@ export default function WorkshopJobsPage() {
                             className="text-[11px] font-semibold text-emerald-600 hover:underline flex items-center space-x-1"
                           >
                             <ClipboardCheck className="w-3 h-3" />
-                            <span>MongoDB Report Linked</span>
+                            <span>Inspection linked</span>
                           </Link>
                         ) : (
                           <Link
@@ -540,7 +540,7 @@ export default function WorkshopJobsPage() {
             </div>
 
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-800">
-              <strong>Database Trigger:</strong> Submitting this calls <code className="font-mono">POST /api/jobs/[id]/parts</code> which fires MySQL trigger <code className="font-mono">trg_deduct_stock_on_part_usage</code> to automatically decrement stock.
+              Allocating a part adds it to this job and updates the available stock.
             </div>
 
             <div className="flex justify-end space-x-2 pt-2">

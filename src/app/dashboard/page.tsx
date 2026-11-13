@@ -51,6 +51,7 @@ export default function DashboardPage() {
   const [lowStockParts, setLowStockParts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState<string[]>([]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -74,6 +75,13 @@ export default function DashboardPage() {
         fetch('/api/invoices').catch(() => null),
         fetch('/api/reports/analytics').catch(() => null),
       ]);
+
+      const sections: [string, Response | null][] = [['customers', custRes], ['vehicles', vehRes], ['appointments', apptRes], ['jobs', jobRes], ['inventory', invRes], ['invoices', invoicesRes], ['analytics', analyticsRes]];
+      const failed = sections.filter(([, response]) => !response?.ok).map(([section]) => section);
+      setUnavailable(failed);
+      if (sections.some(([, response]) => !response || (!response.ok && response.status !== 403))) {
+        setError('Some workshop data could not load. Affected values are marked unavailable. Refresh to try again.');
+      }
 
       const custData = custRes?.ok ? await custRes.json() : null;
       const vehData = vehRes?.ok ? await vehRes.json() : null;
@@ -124,7 +132,8 @@ export default function DashboardPage() {
         setFleetHealth(analyticsData.data.healthMetrics || null);
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to load dashboard data');
+      setUnavailable(['customers', 'vehicles', 'appointments', 'jobs', 'inventory', 'invoices', 'analytics']);
+      setError('Workshop data could not be loaded. Refresh to try again.');
     } finally {
       setLoading(false);
     }
@@ -142,10 +151,10 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Workshop Operations Dashboard
+            Workshop overview
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Real-time status of service bays, customer appointments, inventory thresholds, and vehicle fleet health.
+            Your service activity, appointments, stock and fleet health, together.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -168,6 +177,8 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {error && <div className="dashboard-data-notice" role="status"><AlertTriangle size={18} /><p>{error}</p><button type="button" onClick={fetchDashboardData}>Try again</button></div>}
 
       {/* Low-Stock Parts Banner */}
       {metrics.lowStockCount > 0 && (
@@ -193,7 +204,7 @@ export default function DashboardPage() {
       )}
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="metrics-grid grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Card 1: Customers */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between text-slate-500 mb-2">
@@ -201,7 +212,7 @@ export default function DashboardPage() {
             <Users className="w-4 h-4 text-blue-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {loading ? '...' : metrics.customers}
+            {loading ? '…' : unavailable.includes('customers') ? '—' : metrics.customers}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Verified vehicle owners</div>
         </div>
@@ -213,7 +224,7 @@ export default function DashboardPage() {
             <Car className="w-4 h-4 text-indigo-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {loading ? '...' : metrics.vehicles}
+            {loading ? '…' : unavailable.includes('vehicles') ? '—' : metrics.vehicles}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Registered in workshop</div>
         </div>
@@ -225,7 +236,7 @@ export default function DashboardPage() {
             <Calendar className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {loading ? '...' : metrics.upcomingAppointments}
+            {loading ? '…' : unavailable.includes('appointments') ? '—' : metrics.upcomingAppointments}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Pending & confirmed</div>
         </div>
@@ -237,7 +248,7 @@ export default function DashboardPage() {
             <Wrench className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {loading ? '...' : metrics.activeJobs}
+            {loading ? '…' : unavailable.includes('jobs') ? '—' : metrics.activeJobs}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Assigned or in-progress</div>
         </div>
@@ -249,7 +260,7 @@ export default function DashboardPage() {
             <AlertTriangle className="w-4 h-4 text-rose-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {loading ? '...' : metrics.lowStockCount}
+            {loading ? '…' : unavailable.includes('inventory') ? '—' : metrics.lowStockCount}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Below reorder limit</div>
         </div>
@@ -261,7 +272,7 @@ export default function DashboardPage() {
             <CheckCircle2 className="w-4 h-4 text-teal-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {loading ? '...' : metrics.completedJobs}
+            {loading ? '…' : unavailable.includes('jobs') ? '—' : metrics.completedJobs}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Quality inspection verified</div>
         </div>
@@ -273,7 +284,7 @@ export default function DashboardPage() {
             <Receipt className="w-4 h-4 text-purple-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">
-            {canViewFinancials ? (loading ? '...' : metrics.outstandingInvoices) : 'Restricted'}
+            {canViewFinancials ? (loading ? '…' : unavailable.includes('invoices') ? '—' : metrics.outstandingInvoices) : 'Restricted'}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Awaiting customer payment</div>
         </div>
@@ -288,7 +299,7 @@ export default function DashboardPage() {
             {canViewFinancials
               ? loading
                 ? '...'
-                : `₹${metrics.settledRevenue.toLocaleString('en-IN')}`
+                : unavailable.includes('invoices') ? '—' : `₹${metrics.settledRevenue.toLocaleString('en-IN')}`
               : 'Restricted'}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Total collected via settlements</div>
@@ -302,7 +313,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <Activity className="w-4 h-4 text-blue-600" />
-              <span>Fleet Health Diagnostics (MongoDB)</span>
+              <span>Fleet inspection health</span>
             </h3>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
               Aggregated
@@ -341,7 +352,7 @@ export default function DashboardPage() {
               href="/reports"
               className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center justify-between"
             >
-              <span>Explore MongoDB Repair Reports</span>
+              <span>Explore inspection reports</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -353,7 +364,7 @@ export default function DashboardPage() {
             <h3 className="text-sm font-bold text-slate-900">
               Subsystem Findings & Defect Frequency
             </h3>
-            <span className="text-xs text-slate-500">Pipeline: $unwind & $group</span>
+            <span className="text-xs text-slate-500">Inspection summary</span>
           </div>
 
           <div className="space-y-3">
@@ -377,7 +388,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Dynamic polymorphic schema validated via MongoDB JSON Schema</span>
+            <span>Findings from recorded vehicle inspections</span>
             <Link href="/reports" className="font-semibold text-blue-600 hover:underline">
               View Inspection Findings &rarr;
             </Link>

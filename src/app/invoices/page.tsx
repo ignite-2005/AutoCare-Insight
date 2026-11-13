@@ -123,7 +123,7 @@ export default function InvoicesPage() {
       const json = await res.json();
       if (res.ok && json.success) {
         setIsPaymentModalOpen(false);
-        setSuccessMsg(`Payment of ₹${Number(paymentAmount).toLocaleString('en-IN')} recorded! MySQL trigger trg_mark_invoice_paid evaluated.`);
+        setSuccessMsg(`Payment of ₹${Number(paymentAmount).toLocaleString('en-IN')} recorded. The invoice balance has been updated.`);
         fetchInvoices();
       } else {
         setError(json.error?.message || 'Payment recording failed');
@@ -138,7 +138,7 @@ export default function InvoicesPage() {
     return (
       <div className="p-12 bg-white rounded-xl border border-slate-200 text-center max-w-lg mx-auto mt-10 shadow-sm">
         <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-        <h2 className="text-base font-bold text-slate-900">Access Restricted by RBAC Policy</h2>
+        <h2 className="text-base font-bold text-slate-900">Billing access is restricted</h2>
         <p className="text-xs text-slate-500 mt-2">
           Financial accounts and billing ledger records are restricted to <strong>Admin</strong> and <strong>Service Advisor</strong> roles.
         </p>
@@ -168,7 +168,7 @@ export default function InvoicesPage() {
             Invoices & Settlement Ledger
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Automated billing generated via stored procedures with 18% GST calculation, itemized labor & parts, and trigger-driven status updates.
+            Review service invoices, itemized parts and labour, GST, and payment status.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -232,14 +232,14 @@ export default function InvoicesPage() {
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-500">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
-            Loading invoices from MySQL ledger...
+            Loading invoices…
           </div>
         ) : filteredInvoices.length === 0 ? (
           <div className="p-12 text-center text-xs text-slate-500">
             No invoices found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable results">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
@@ -509,7 +509,7 @@ export default function InvoicesPage() {
           </div>
 
           <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] text-emerald-800">
-            <strong>Database Trigger Integration:</strong> Submitting payment inserts a record into <code className="font-mono">invoice_payments</code>, which triggers MySQL <code className="font-mono">trg_mark_invoice_paid</code> to automatically mark invoice status as <code className="font-mono">&apos;paid&apos;</code> when fully covered.
+            Recording a payment updates the outstanding balance. Fully settled invoices are marked as paid.
           </div>
 
           <div className="flex justify-end space-x-2 pt-2">

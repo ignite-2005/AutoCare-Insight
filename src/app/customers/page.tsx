@@ -182,14 +182,14 @@ export default function CustomersPage() {
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-500">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
-            Loading customers from MySQL database...
+            Loading customers…
           </div>
         ) : customers.length === 0 ? (
           <div className="p-12 text-center text-xs text-slate-500">
             No customers found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable results">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">

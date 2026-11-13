@@ -365,14 +365,14 @@ export default function AppointmentsPage() {
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-500">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
-            Loading appointments from MySQL...
+            Loading appointments…
           </div>
         ) : filteredAppointments.length === 0 ? (
           <div className="p-12 text-center text-xs text-slate-500">
             No appointments found matching current criteria.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable results">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
@@ -586,7 +586,7 @@ export default function AppointmentsPage() {
             <input value={intakeCaption} onChange={e => setIntakeCaption(e.target.value)} maxLength={250} disabled={bookingBusy} placeholder="e.g. Existing scratch on rear-left door" className="mt-1 w-full rounded border border-slate-200 bg-slate-50 p-2" />
           </label>
           <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-[11px] text-blue-700">
-            <strong>Stored Procedure Integration:</strong> This triggers MySQL <code className="font-mono">sp_book_appointment</code> which verifies no conflicting active appointment exists for the same vehicle before committing.
+            We check for conflicting active appointments for this vehicle before booking.
           </div>
 
           <div className="flex items-center justify-end space-x-2 pt-2">

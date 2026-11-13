@@ -2,9 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   distDir: process.env.NEXT_BUILD_DIR || '.next',
-  experimental: {
-    serverComponentsExternalPackages: ['mysql2', 'mongodb', 'bcryptjs', 'sharp']
-  }
+  serverExternalPackages: ['mysql2', 'mongodb', 'bcryptjs', 'sharp']
 };
 
 module.exports = nextConfig;

@@ -115,7 +115,7 @@ function RepairReportsContent() {
         setAnalytics(aJson.data);
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to load MongoDB inspection reports');
+      setError(err?.message || 'Failed to load inspection reports');
     } finally {
       setLoading(false);
     }
@@ -198,7 +198,7 @@ function RepairReportsContent() {
       const json = await res.json();
       if (res.ok && json.success) {
         setIsCreateModalOpen(false);
-        setSuccessMsg(`MongoDB Inspection Report created! Cross-linked with MySQL Job #${createForm.job_id}.`);
+        setSuccessMsg(`Inspection report saved and linked to Job #${createForm.job_id}.`);
         fetchReports();
       } else {
         setError(json.error?.message || 'Report creation failed validation');
@@ -224,7 +224,7 @@ function RepairReportsContent() {
             Diagnostic & Repair Reports
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            MongoDB document store containing multi-point vehicle inspection findings, DTC fault codes, and health scores.
+            Inspection findings, diagnostic trouble codes and vehicle health, connected to each service job.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -271,7 +271,7 @@ function RepairReportsContent() {
             <div className="text-2xl font-black text-slate-900 mt-1">
               {analytics.healthMetrics?.totalReports ?? reports.length}
             </div>
-            <span className="text-[11px] text-slate-400">Stored in MongoDB</span>
+            <span className="text-[11px] text-slate-400">Inspection records</span>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
@@ -294,7 +294,7 @@ function RepairReportsContent() {
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Polymorphic Schema</span>
             <div className="text-sm font-bold text-emerald-700 mt-2 flex items-center space-x-1">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>JSON Schema Active</span>
+              <span>Validated reports</span>
             </div>
             <span className="text-[11px] text-slate-400">repair_reports validator</span>
           </div>
@@ -306,11 +306,11 @@ function RepairReportsContent() {
         {loading ? (
           <div className="col-span-full p-12 text-center text-xs text-slate-500">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
-            Querying MongoDB documents...
+            Loading inspection reports…
           </div>
         ) : reports.length === 0 ? (
           <div className="col-span-full p-12 text-center text-xs text-slate-500">
-            No inspection reports found in MongoDB collection.
+            No inspection reports found.
           </div>
         ) : (
           reports.map((report) => (
@@ -404,7 +404,7 @@ function RepairReportsContent() {
       <Modal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        title={`MongoDB Inspection Report — Job #${selectedReport?.job_id}`}
+        title={`Inspection report — Job #${selectedReport?.job_id}`}
         maxWidth="max-w-3xl"
       >
         {selectedReport && (
@@ -418,13 +418,13 @@ function RepairReportsContent() {
                 </div>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Cross-Link MySQL Job</span>
+                <span className="text-[10px] text-slate-500 uppercase font-semibold">Linked service job</span>
                 <div className="text-xl font-black text-slate-800 mt-0.5">
                   Job #{selectedReport.job_id}
                 </div>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">MongoDB Doc ID</span>
+                <span className="text-[10px] text-slate-500 uppercase font-semibold">Report reference</span>
                 <div className="font-mono text-slate-600 text-[11px] truncate mt-1">
                   {selectedReport._id}
                 </div>
@@ -505,13 +505,13 @@ function RepairReportsContent() {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Create MongoDB Vehicle Inspection Report"
+        title="Create vehicle inspection report"
         maxWidth="max-w-3xl"
       >
         <form onSubmit={handleCreateReport} className="space-y-4 text-xs">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">MySQL Job ID *</label>
+              <label className="block font-semibold text-slate-700 mb-1">Service job ID *</label>
               <input
                 type="number"
                 required
@@ -656,7 +656,7 @@ function RepairReportsContent() {
           </div>
 
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-800">
-            <strong>Cross-Paradigm Sync:</strong> Inserting this MongoDB document will automatically update <code className="font-mono">service_jobs.mongo_report_id</code> in MySQL with the generated BSON <code className="font-mono">_id</code>.
+            This inspection report will be linked to the selected service job.
           </div>
 
           <div className="flex justify-end space-x-2 pt-2">
@@ -671,7 +671,7 @@ function RepairReportsContent() {
               type="submit"
               className="px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
             >
-              Save & Synchronize to MongoDB
+              Save inspection report
             </button>
           </div>
         </form>
