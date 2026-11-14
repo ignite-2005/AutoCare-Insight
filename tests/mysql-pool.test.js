@@ -36,6 +36,7 @@ test('hosted MySQL pool verifies the certificate and hostname and accepts an exp
   assert.equal(ssl.rejectUnauthorized, true);
   assert.equal(ssl.verifyIdentity, true);
   assert.equal(ssl.minVersion, 'TLSv1.2');
+  assert.equal(pool.pool.config.connectionConfig.connectTimeout, 30000);
   assert.equal(ssl.ca, 'certificate-line-one\ncertificate-line-two');
 });
 

@@ -24,6 +24,9 @@ export function getMySqlPool(): Pool {
       user,
       password,
       database,
+      // A free hosted database may need more than the driver's 10-second default
+      // to wake after an idle period. Keep the wait bounded without replaying SQL.
+      connectTimeout: 30000,
       waitForConnections: true,
       connectionLimit,
       queueLimit: 0,
