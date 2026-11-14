@@ -109,6 +109,26 @@ hosting regions.
 
 ## Deployment acceptance
 
+### Git deployment configuration
+
+The repository includes `vercel.json` with automatic deployments enabled for
+`master` and disabled for other branches. Vercel bot comments are silenced.
+Production database secrets remain in the existing Vercel project; they are not
+copied to GitHub or preview environments.
+
+The Git connection setup requires the owner to grant the Vercel GitHub App
+access to `ignite-2005/AutoCare-Insight`. The configuration is prepared, but the
+connection is awaiting that repository permission. GitHub rejected the current
+CLI authorization's attempt to change the app installation's access.
+
+After granting access, connect the repository to the existing `autocare-insight`
+Vercel project, confirm its production branch is `master`, and enable automatic
+Git deployments. Keep the current project and environment variables. Verify an
+actual push creates a successful production build and updates the public URL.
+A configured Git remote alone does not establish automatic deployment.
+
+### Build and release checks
+
 The source packager at scripts/prepare-vercel-source.ps1 creates a fresh ignored
 upload directory from an explicit app/config/public whitelist and records a
 SHA-256 manifest separately. Env files, databases, tools, backups and private

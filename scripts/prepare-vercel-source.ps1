@@ -5,7 +5,7 @@ $releaseRoot = Join-Path $projectRoot ".tools/vercel-releases/$releaseId"
 
 # Upload only the application. Local env files, databases, backups, tools and
 # private review evidence never enter the deployment directory.
-$files = @('package.json', 'package-lock.json', 'next.config.js',
+$files = @('package.json', 'package-lock.json', 'next.config.js', 'vercel.json',
   'postcss.config.js', 'tailwind.config.js', 'tsconfig.json', '.eslintrc.json')
 $directories = @('src', 'public')
 New-Item -ItemType Directory -Path $releaseRoot | Out-Null
