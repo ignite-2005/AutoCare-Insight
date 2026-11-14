@@ -9,6 +9,16 @@ and MongoDB. All three must run independently of the developer's PC.
 Released on 14 November 2026 from application commit `7dff13d` using Next.js
 15.5.29 / Node 22. The tested production build was promoted without rebuilding.
 
+Follow-up `ec441d5` raises the MySQL connection timeout from the driver's
+10-second default to a bounded 30 seconds. A later availability check observed
+one connection timeout after a long idle period, followed by successful sign-in.
+The longer wait gives the hosted database more time to wake without replaying
+SQL statements or changing credentials, TLS requirements or database records.
+The follow-up passed all 58 tests and TypeScript, then fresh staged and public
+checks for sign-in, the workspace pages and all main module read APIs. The
+check included an idle interval; provider status remained active, so it does
+not establish recovery from every possible suspended-provider condition.
+
 The application and both databases run in cloud services. No PC tunnel, paid
 plan, student credit or card-backed trial is required for this deployment.
 This is a shared educational demo with sample accounts and mutable sample data.
