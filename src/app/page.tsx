@@ -1,6 +1,6 @@
 import { CinematicHero, ScrollProgress } from '@/components/motion/CinematicHero';
 import { ScrollWorkshop } from '@/components/motion/ScrollWorkshop';
-import { MotionToggle, Reveal } from '@/components/motion/SiteMotion';
+import { Reveal } from '@/components/motion/SiteMotion';
 import { motionTokens } from '@/lib/motion-tokens';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Wrench, CalendarDays, ClipboardCheck, Package, ShieldCheck, Activity, Car, Gauge, Receipt } from 'lucide-react';
@@ -44,7 +44,7 @@ export default function HomePage() {
         <section className="product-foundations page-container"><Reveal><div data-tone="blue"><ClipboardCheck size={30} /><h3>A clear handover.</h3><p>From booking to job card, keep vehicle details and service requests in context.</p></div></Reveal><Reveal delay={motionTokens.stagger}><div data-tone="violet"><Activity size={30} /><h3>Connected diagnostics.</h3><p>Link inspection findings to the work, parts and history behind every repair.</p></div></Reveal><Reveal delay={motionTokens.stagger * 2}><div data-tone="emerald"><Receipt size={30} /><h3>Confident settlement.</h3><p>Bring completed work, stock usage, invoices and payments together.</p></div></Reveal></section>
         <section className="product-cta page-container"><div><p className="eyebrow">THE NEXT SERVICE STARTS HERE</p><h2>Bring your workshop into focus.</h2></div><Link href="/login" className="button-primary">Enter the workspace <ArrowRight size={18} /></Link></section>
       </main>
-      <footer className="product-footer page-container"><Link href="/" className="brand-lockup">AutoCare Insight</Link><span>Vehicle service, connected.</span><MotionToggle /><a href="https://github.com/ignite-2005/AutoCare-Insight" target="_blank" rel="noreferrer">Explore the project <ArrowUpRight size={14} /></a></footer>
+      <footer className="product-footer page-container"><Link href="/" className="brand-lockup">AutoCare Insight</Link><span>Vehicle service, connected.</span><a href="https://github.com/ignite-2005/AutoCare-Insight" target="_blank" rel="noreferrer">Explore the project <ArrowUpRight size={14} /></a></footer>
     </div>
   );
 }

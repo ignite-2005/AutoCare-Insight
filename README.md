@@ -21,7 +21,7 @@ MySQL handles the transactional core. MongoDB stores variable inspection reports
 
 ## Application preview
 
-The approved interface combines a cinematic workshop introduction, a service journey that advances as you scroll, and a consistent workspace with distinct module accents. Stage buttons, dialogs and navigation provide motion feedback, with a reduced-motion control in the footer.
+The approved interface combines a cinematic workshop introduction, a service journey that advances as you scroll, and a consistent workspace with distinct module accents. Stage buttons, dialogs and navigation provide motion feedback and respect the device's reduced-motion setting.
 
 ![AutoCare Insight introduction](public/images/landing.jpg)
 
