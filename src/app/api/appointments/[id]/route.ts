@@ -69,6 +69,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       throw new ValidationError(`Status must be one of: ${validStatuses.join(', ')}`);
     }
 
+    const scheduledDate = scheduled_at ? new Date(scheduled_at) : null;
+    if (scheduledDate && !Number.isFinite(scheduledDate.getTime())) {
+      throw new ValidationError('Invalid scheduled_at date format');
+    }
+
     await execute(
       `UPDATE appointments
        SET status = COALESCE(?, status),
@@ -78,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
        WHERE appointment_id = ?`,
       [
         status || null,
-        scheduled_at ? new Date(scheduled_at).toISOString().slice(0, 19).replace('T', ' ') : null,
+        scheduledDate,
         advisor_notes !== undefined ? advisor_notes : null,
         advisor_id !== undefined ? Number(advisor_id) : null,
         appointmentId

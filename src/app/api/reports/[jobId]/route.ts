@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { getRepairReportsCollection } from '@/lib/db/mongodb';
 import { requireAuth } from '@/lib/auth/session';
 import { enforcePermission } from '@/lib/auth/rbac';
+import { requireAssignedJob } from '@/lib/auth/job-access';
+import { queryOne } from '@/lib/db/mysql';
 import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonSuccess } from '@/lib/utils/api-response';
 
@@ -43,6 +45,9 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     }
 
     const body = await req.json().catch(() => ({}));
+    const job = await queryOne<any>('SELECT mechanic_id FROM service_jobs WHERE job_id = ?', [jobId]);
+    if (!job) throw new NotFoundError('Service job not found');
+    requireAssignedJob(user, job);
     const collection = await getRepairReportsCollection();
 
     const existing = await collection.findOne({ job_id: jobId });

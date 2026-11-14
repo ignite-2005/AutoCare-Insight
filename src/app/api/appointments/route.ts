@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
           Number(customer_id),
           Number(vehicle_id),
           Number(advisorId),
-          scheduledDate.toISOString().slice(0, 19).replace('T', ' '),
+          scheduledDate,
           service_type_id ? Number(service_type_id) : null,
           customer_notes ? String(customer_notes).trim() : null
         ]

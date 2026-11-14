@@ -5,6 +5,7 @@ import { execute, queryOne } from '@/lib/db/mysql';
 import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { requireAuth } from '@/lib/auth/session';
 import { enforcePermission } from '@/lib/auth/rbac';
+import { requireAssignedJob } from '@/lib/auth/job-access';
 import { validateRepairReport } from '@/lib/validation/repair-report';
 import { handleApiError, jsonSuccess, jsonCreated } from '@/lib/utils/api-response';
 
@@ -49,8 +50,9 @@ export async function POST(req: NextRequest) {
 
     const validatedDoc = validateRepairReport(rawBody);
 
-    const job = await queryOne<any>('SELECT job_id, vehicle_id FROM service_jobs WHERE job_id = ?', [validatedDoc.job_id]);
+    const job = await queryOne<any>('SELECT job_id, vehicle_id, mechanic_id FROM service_jobs WHERE job_id = ?', [validatedDoc.job_id]);
     if (!job) throw new NotFoundError('Service job not found');
+    requireAssignedJob(user, job);
     if (job.vehicle_id !== validatedDoc.vehicle_id) throw new ValidationError('Vehicle does not match the service job');
     const collection = await getRepairReportsCollection();
     const insertResult = await collection.insertOne({ ...validatedDoc, created_at: new Date(validatedDoc.created_at) } as any);

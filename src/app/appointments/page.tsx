@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { IntakePhotoPicker } from '@/components/ui/IntakePhotoPicker';
 import { IntakePhotoGallery } from '@/components/ui/IntakePhotoGallery';
 import { uploadIntakePhotos } from '@/lib/upload-intake-photos';
+import { appointmentInstant, appointmentLocalInput } from '@/lib/appointment-time';
 import {
   Calendar,
   Plus,
@@ -154,7 +155,7 @@ export default function AppointmentsPage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             customer_id: Number(formData.customer_id), vehicle_id: Number(formData.vehicle_id),
-            service_type_id: Number(formData.service_type_id), scheduled_at: formData.scheduled_at,
+            service_type_id: Number(formData.service_type_id), scheduled_at: appointmentInstant(formData.scheduled_at),
             mileage_at_booking: formData.mileage_at_booking ? Number(formData.mileage_at_booking) : undefined,
             customer_notes: formData.customer_notes,
           }),
@@ -202,7 +203,7 @@ export default function AppointmentsPage() {
       const res = await fetch(`/api/appointments/${selectedAppt.appointment_id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scheduled_at: newScheduleDate }),
+        body: JSON.stringify({ scheduled_at: appointmentInstant(newScheduleDate) }),
       });
       const json = await res.json();
       if (res.ok && json.success) {
@@ -448,7 +449,7 @@ export default function AppointmentsPage() {
                           <button
                             onClick={() => {
                               setSelectedAppt(appt);
-                              setNewScheduleDate(appt.scheduled_at.slice(0, 16));
+                              setNewScheduleDate(appointmentLocalInput(appt.scheduled_at));
                               setIsRescheduleOpen(true);
                             }}
                             className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition"

@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import { query, queryOne, execute } from '@/lib/db/mysql';
 import { requireAuth } from '@/lib/auth/session';
 import { enforcePermission } from '@/lib/auth/rbac';
-import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/db/errors';
+import { requireAssignedJob } from '@/lib/auth/job-access';
+import { NotFoundError, ValidationError } from '@/lib/db/errors';
 import { handleApiError, jsonSuccess } from '@/lib/utils/api-response';
 
 interface RouteContext {
@@ -94,9 +95,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     // Role check: mechanics can only update jobs assigned to them
-    if (user.role === 'mechanic' && existing.mechanic_id && existing.mechanic_id !== user.user_id) {
-      throw new ForbiddenError('Mechanics can only update their own assigned jobs');
-    }
+    requireAssignedJob(user, existing, mechanic_id);
 
     const validStatuses = ['assigned', 'in_progress', 'on_hold', 'completed', 'cancelled'];
     if (status && !validStatuses.includes(status)) {
