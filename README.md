@@ -15,7 +15,9 @@ AutoCare Insight brings appointments, workshop jobs, inspection findings, spare 
 
 MySQL handles the transactional core. MongoDB stores variable inspection reports. The application connects the two through service jobs.
 
-[Application preview](#application-preview) · [Run locally](#run-locally) · [Free deployment](docs/DEPLOYMENT.md) · [Architecture](#architecture) · [Roadmap](#roadmap)
+[Live website](https://autocare-insight.vercel.app) · [Application preview](#application-preview) · [Run locally](#run-locally) · [Free deployment](docs/DEPLOYMENT.md) · [Architecture](#architecture) · [Roadmap](#roadmap)
+
+**Try the shared demo:** [autocare-insight.vercel.app](https://autocare-insight.vercel.app). Sign in as `rajesh@autocare.com` with `password123` to explore the service advisor workspace. Use sample data; visitors share this educational demonstration. It runs on cloud services with the developer's PC switched off. Free database hosting can introduce an idle startup delay.
 
 ## Application preview
 
@@ -32,7 +34,7 @@ The approved interface combines a cinematic workshop introduction, a service jou
 
 ![The service journey with image transitions](public/images/service-journey.jpg)
 
-These are captures of the working interface. The patched Vercel cloud build has passed; full public access is pending hosted database configuration and verification. [Deployment status](deploy/MANAGED_HOSTING.md).
+These are captures of the working interface. The public release has passed cloud sign-in, role checks, booking/rescheduling, photo upload, job assignment, inspection reports, stock deductions, concurrent invoice creation and recorded payments. [Deployment details](deploy/MANAGED_HOSTING.md).
 
 ## The service journey
 
@@ -77,7 +79,7 @@ npm run setup:db
 npm run dev
 ```
 
-Open **http://localhost:3000**. The introduction is public; the workspace requires a seeded or existing account. Local evaluation credentials and the walkthrough are in [VIVA_GUIDE.md](VIVA_GUIDE.md). Do not reuse evaluation passwords on an unrestricted public installation.
+Open **http://localhost:3000**. The introduction is public; the workspace requires a seeded or existing account. Evaluation credentials and the walkthrough are in [VIVA_GUIDE.md](VIVA_GUIDE.md). The shared hosted demo intentionally uses sample accounts; use separate credentials and databases before handling private workshop records.
 
 `setup:db` preserves existing tables and records. Do not run the historical `01_create_database.sql` against an existing database: it drops the database.
 
@@ -94,9 +96,9 @@ The complete test runner includes live MySQL and MongoDB checks. Start both serv
 
 ## Free deployment
 
-The independent hosting route uses **Vercel Hobby**, **native MySQL hosting**, and **MongoDB Atlas M0**. Both databases must be hosted for the app to work with the developer's PC switched off. MySQL stored routines and triggers are required; a partially compatible SQL service is insufficient.
+The live application uses **Vercel Hobby**, **Enzonic Free native MySQL**, and **MongoDB Atlas M0**. Both databases are hosted independently of the developer's PC. MySQL stored routines and triggers remain intact. No paid plan, student credit or card-backed trial was used.
 
-The Vercel build and free Atlas cluster are ready. Database migration and complete public acceptance remain pending. [Managed hosting guide](deploy/MANAGED_HOSTING.md) · [Deployment and Docker guide](docs/DEPLOYMENT.md). A Cloudflare Quick Tunnel depends on the PC and does not meet the independent-hosting goal.
+The tested production build is public at [autocare-insight.vercel.app](https://autocare-insight.vercel.app). Backup recovery, database migration, the cloud workshop workflow and anonymous public access were verified before release. Free tiers have capacity limits and can pause idle databases. [Managed hosting guide](deploy/MANAGED_HOSTING.md) · [Deployment and Docker guide](docs/DEPLOYMENT.md).
 
 ## Roadmap
 

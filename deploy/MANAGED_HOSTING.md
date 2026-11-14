@@ -5,20 +5,34 @@ and MongoDB. All three must run independently of the developer's PC.
 
 ## Deployment status
 
-The Next.js 15.5.29 production build passed on Vercel Hobby / Node 22. Protected
-cloud checks passed for the introduction, login, approved artwork and private
-API authorization. A separate MongoDB Atlas M0 cluster has been provisioned.
+**Live:** [autocare-insight.vercel.app](https://autocare-insight.vercel.app).
+Released on 14 November 2026 from application commit `7dff13d` using Next.js
+15.5.29 / Node 22. The tested production build was promoted without rebuilding.
 
-**The complete public application is not released yet.** Cloud database access,
-MySQL compatibility, migration and full workflow acceptance remain pending.
-A successful web build does not establish database-backed functionality.
+The application and both databases run in cloud services. No PC tunnel, paid
+plan, student credit or card-backed trial is required for this deployment.
+This is a shared educational demo with sample accounts and mutable sample data.
+
+Release checks passed for three demo roles, server-side permission boundaries,
+all workspace pages, SQL/MongoDB analytics and diagnostic search. A temporary
+customer/vehicle completed booking and rescheduling, a 5.4 MB photo selection
+sent as separate uploads, protected image retrieval, job assignment, stock
+deduction, MongoDB inspection, concurrent invoices and recorded payments.
+Mechanics cannot claim unassigned jobs or reassign mechanics.
+
+Test records, images, reports and their inventory audit rows were removed.
+Post-test verification matched all 3,383 MySQL rows and all three MongoDB reports
+to the unchanged local source. Backup recovery had passed before migration.
+The final public URL was checked without Vercel authentication or an automation
+bypass: homepage, login, 12 JavaScript/CSS assets, optimized hero image, demo
+sign-in and database-backed reads passed. Anonymous private APIs returned 401.
 
 ## Free service requirements
 
 | Component | Route | Requirement |
 | --- | --- | --- |
 | Next.js + API | Vercel Hobby | Personal project; server-only production secrets |
-| Relational data | Enzonic Free MySQL candidate | Verify actual Free plan, TLS, routines, views, transactions and triggers |
+| Relational data | Enzonic Free native MySQL 8.4 | Free plan, verified TLS, routines, views, transactions and triggers |
 | Inspection documents | MongoDB Atlas M0 | Dedicated project and database-scoped runtime credentials |
 
 References: [Vercel Hobby](https://vercel.com/docs/plans/hobby),
@@ -26,7 +40,9 @@ References: [Vercel Hobby](https://vercel.com/docs/plans/hobby),
 [Enzonic pricing](https://enzonic.dev/pricing/),
 [Atlas Free](https://www.mongodb.com/docs/atlas/tutorial/deploy-free-tier-cluster/).
 Do not enable paid tiers, payment-backed trials or automatic paid upgrades.
-Free services can have idle startup delays and capacity limits.
+Free services can have idle startup delays and capacity limits. Enzonic can
+pause an idle database; the next connection wakes it. These free plans do not
+provide an unlimited-capacity or continuous-uptime guarantee.
 
 ## Database migration
 
@@ -68,7 +84,9 @@ There is no insecure-certificate bypass or automatic plaintext fallback.
 Keep database secrets out of preview environments and all NEXT_PUBLIC variables.
 MongoDB connects lazily, shares in-flight connections and recovers after failure.
 The configured MySQL clock applies to both driver date decoding and every pool
-session, preserving appointment and audit times across hosting regions.
+session. Browser appointment inputs send explicit instants, and SQL parameters
+use Date objects, preserving booking, rescheduling and audit times across
+hosting regions.
 
 ## Deployment acceptance
 

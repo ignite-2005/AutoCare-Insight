@@ -1,22 +1,46 @@
-﻿# Presentation review
+# Presentation and release review
 
-The public introduction follows SakuraMind's presentation sequence: original branded banner, real application screenshots with captions, workflow explanation, architecture, setup, deployment, and a clearly proposed roadmap. AutoCare uses an automotive blueprint and restrained green/ivory palette rather than copying SakuraMind's wellness branding.
+The approved design uses the cinematic workshop artwork, blue/copper/violet/emerald
+workflow sections, a scroll-linked hero, a pinned four-stage image story, and
+shared controls across the workshop workspace. Stage buttons follow the reading
+position and move to their corresponding chapters. Dialogs and controls provide
+interaction feedback. Dark/light themes and reduced motion remain available.
 
-Contract: visitors must understand the service workflow and reach sign-in; returning staff use the existing workspace. Public content must render without a database session. The introduction must fit 390x844 and 1440x1000 viewports. All preview images must come from the working local application. No fabricated metrics or trained-model claims.
+The GitHub overview follows SakuraMind's presentation sequence: branded opening,
+actual application screenshots, workflow, architecture, setup and roadmap.
+The banner and text-free website artwork were approved by the project owner.
+Future new project artwork still needs owner approval before integration.
 
-Verified:
+## Visual verification
 
-- Production build succeeds; 19 static pages and API routes compiled.
-- 41/41 automated tests pass, including real MySQL/MongoDB queries and photo validation.
-- Typecheck passes; lint completes with pre-existing hook dependency warnings in operational pages.
-- Browser checked at 390x844 and 1440x1000 using device emulation. No horizontal overflow.
-- Banner and all three product screenshot assets load successfully.
-- Skip link receives a visible focus outline; navigation and primary actions are native links. Mobile primary controls meet a 44px minimum target height. The public page introduces no motion.
-- Logout leaves the public introduction visible; an unauthenticated jobs API request is denied.
-- Compose configuration validates using non-secret placeholder environment values. The container stack has not been built or started; runtime Docker portability remains unverified.
+The approved local revision was checked at 1440x1000 and 390x844. Checks covered
+scrolling through all four chapters in both directions, stage-button navigation,
+no horizontal overflow, keyboard focus, dialog focus containment/Escape/focus
+return, and light/dark workspace colours. Reduced motion removes spatial
+transforms and uses immediate chapter navigation. A simulated invoice-fetch
+failure retained other dashboard counts and recovered after refresh.
 
-Artifacts: `mobile.jpg` and `../../public/images/landing.jpg`. Product screenshots are in `../../public/images/`.
+Published screenshots are in [public/images](../../public/images). They capture
+the working interface. Local visual checks preceded the cloud release; cloud
+HTTP/API checks do not replace a new browser or assistive-technology audit.
 
-The read-only public introduction has no asynchronous data lists, submission flow, or user-controlled content. Loading, empty, error and partial-data component states do not apply to this static surface. Existing operational page states were not exhaustively re-audited.
+## Release verification
 
-The temporary demo is hosted on the user's computer through Cloudflare, not permanently on cloud infrastructure. A tunnel restart changes the public URL.
+- 58 automated tests pass, including real local MySQL/MongoDB queries, image
+  validation, bounded upload transport, session signing, appointment timezone
+  round trips and mechanic assignment permissions.
+- TypeScript passes. Lint completes with existing hook-dependency warnings.
+- Next.js is patched to 15.5.29. The production-only dependency audit reported
+  zero findings at the release checkpoint; development-tool findings remain.
+- Private backup recovery passed in isolated MySQL/MongoDB containers before
+  cloud import. The original local databases were preserved.
+- Hosted MySQL preserves 3,383 rows across 15 base tables, seven routines, five
+  triggers and six views. All 20 registered SQL queries execute successfully.
+- Hosted MongoDB preserves the three reports and their IDs, five indexes,
+  validation options and all seven aggregation pipelines.
+
+The cloud workflow passed and its temporary records were removed. The tested
+production build is live at [autocare-insight.vercel.app](https://autocare-insight.vercel.app).
+Anonymous public access, optimized artwork/assets, demo sign-in and both hosted
+databases passed final HTTP checks. Detailed release status and hosting limits are in the
+[managed hosting guide](../../deploy/MANAGED_HOSTING.md).
