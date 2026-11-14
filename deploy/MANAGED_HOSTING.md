@@ -41,8 +41,12 @@ Free services can have idle startup delays and capacity limits.
    supports autocare_insight; do not use it against another existing database.
 5. Preserve MongoDB document IDs so relational report references remain valid.
    Restore full text-index options, including fields, weights and language.
-6. Separate runtime and provisioning credentials. Grant runtime access only to
-   AutoCare's database; remove temporary provisioning access after acceptance.
+6. Grant runtime access only to AutoCare's database and remove temporary
+   provisioning access after acceptance. Atlas uses a separate readWrite runtime
+   account; its temporary provisioning account has been removed. Enzonic's extra
+   user endpoint did not assign usable grants, so its server-side application
+   credential is the provider's account restricted to the main schema. That
+   account has no global administration, user management or grant-option rights.
 
 Atlas's network policy must permit the application host. Vercel Hobby uses
 changing outbound addresses. Review that policy for the new application project;
@@ -54,6 +58,7 @@ Set these in the hosting provider's secret manager, never in source:
 
 - MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE.
 - MYSQL_SSL=true; optional MYSQL_SSL_CA and MYSQL_CONNECTION_LIMIT.
+- MYSQL_TIMEZONE=+05:30 for the Indian workshop; local preserves a local install.
 - MONGODB_URI and MONGODB_DB_NAME.
 - A new random JWT_SECRET.
 
@@ -62,6 +67,8 @@ requires TLS 1.2 or later. It accepts PEM CA text with real or escaped newlines.
 There is no insecure-certificate bypass or automatic plaintext fallback.
 Keep database secrets out of preview environments and all NEXT_PUBLIC variables.
 MongoDB connects lazily, shares in-flight connections and recovers after failure.
+The configured MySQL clock applies to both driver date decoding and every pool
+session, preserving appointment and audit times across hosting regions.
 
 ## Deployment acceptance
 

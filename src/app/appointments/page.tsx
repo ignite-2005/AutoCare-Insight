@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { IntakePhotoPicker } from '@/components/ui/IntakePhotoPicker';
 import { IntakePhotoGallery } from '@/components/ui/IntakePhotoGallery';
+import { uploadIntakePhotos } from '@/lib/upload-intake-photos';
 import {
   Calendar,
   Plus,
@@ -164,19 +165,14 @@ export default function AppointmentsPage() {
         setBookedId(appointmentId);
       }
       if (intakeFiles.length) {
-        const body = new FormData();
-        intakeFiles.forEach(file => body.append('photos', file));
-        body.append('caption', intakeCaption);
-        const res = await fetch(`/api/appointments/${appointmentId}/photos`, { method: 'POST', body });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error?.message || 'Could not save intake photos');
+        await uploadIntakePhotos(appointmentId, intakeFiles, intakeCaption);
       }
       setIsBookModalOpen(false); setBookedId(null); setIntakeFiles([]); setIntakeCaption('');
       setSuccessMsg(`Appointment #${appointmentId} booked successfully.${intakeFiles.length ? ' Intake photos saved.' : ''}`);
       void fetchAppointments();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Request failed';
-      setError(appointmentId ? `Appointment #${appointmentId} is already saved. Photos were not confirmed saved: ${message}. Retry saving photos here, or open Intake photos on the appointment. Do not book again.` : message);
+      setError(appointmentId ? `Appointment #${appointmentId} is already saved. ${message}. Some photos may already be saved; retrying skips duplicates. Retry here or open Intake photos on the appointment. Do not book again.` : message);
     } finally { setBookingBusy(false); }
   };
 

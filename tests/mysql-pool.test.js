@@ -53,3 +53,33 @@ test('invalid MySQL TLS configuration fails before connecting without exposing i
     return true;
   });
 });
+
+test('a hosted workshop clock is explicit in the actual pool configuration', async t => {
+  const previous = process.env.MYSQL_TIMEZONE;
+  const modulePath = require.resolve('../src/lib/db/mysql.ts');
+  process.env.MYSQL_TIMEZONE = '+05:30';
+  delete require.cache[modulePath];
+  const pool = require(modulePath).getMySqlPool();
+  t.after(async () => {
+    await pool.end(); delete globalThis._autoCareMySqlPool; delete require.cache[modulePath];
+    if (previous === undefined) delete process.env.MYSQL_TIMEZONE; else process.env.MYSQL_TIMEZONE = previous;
+  });
+  assert.equal(pool.pool.config.connectionConfig.timezone, '+05:30');
+  assert.ok(pool.pool.listenerCount('connection') > 0);
+});
+
+test('an invalid workshop clock fails without revealing the supplied value', t => {
+  const previous = process.env.MYSQL_TIMEZONE;
+  const modulePath = require.resolve('../src/lib/db/mysql.ts');
+  process.env.MYSQL_TIMEZONE = 'private-invalid-clock';
+  delete require.cache[modulePath];
+  t.after(() => {
+    delete require.cache[modulePath];
+    if (previous === undefined) delete process.env.MYSQL_TIMEZONE; else process.env.MYSQL_TIMEZONE = previous;
+  });
+  assert.throws(() => require(modulePath).getMySqlPool(), error => {
+    assert.ok(!error.message.includes('private-invalid-clock'));
+    assert.equal(globalThis._autoCareMySqlPool, undefined);
+    return true;
+  });
+});

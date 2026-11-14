@@ -1,6 +1,8 @@
 import mysql, { Pool, PoolConnection, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { DatabaseError, ConflictError, ValidationError } from './errors';
 import { mysqlTlsOptions } from './mysql-tls';
+import { mysqlTimezone } from './mysql-timezone';
+import type { Pool as CallbackPool, PoolConnection as CallbackPoolConnection } from 'mysql2';
 
 // Next.js reloads route modules during development. Keep one pool per process,
 // rather than abandoning open connections whenever a module is re-evaluated.
@@ -14,6 +16,7 @@ export function getMySqlPool(): Pool {
     const password = process.env.MYSQL_PASSWORD || '';
     const database = process.env.MYSQL_DATABASE || 'autocare_insight';
     const connectionLimit = Number(process.env.MYSQL_CONNECTION_LIMIT) || 10;
+    const { timezone, sessionTimeZone } = mysqlTimezone();
 
     globalWithMySql._autoCareMySqlPool = mysql.createPool({
       host,
@@ -27,8 +30,19 @@ export function getMySqlPool(): Pool {
       enableKeepAlive: true,
       keepAliveInitialDelay: 10000,
       namedPlaceholders: true,
+      timezone,
       ...mysqlTlsOptions(),
     });
+    if (sessionTimeZone) {
+      const callbackPool = (globalWithMySql._autoCareMySqlPool as Pool & { pool: CallbackPool }).pool;
+      callbackPool.on('connection', (connection: CallbackPoolConnection) => {
+        // Queue this before the connection's first application query. Never use
+        // a connection with a mismatched workshop clock after initialization fails.
+        connection.query('SET time_zone = ?', [sessionTimeZone], error => {
+          if (error) connection.destroy();
+        });
+      });
+    }
   }
   return globalWithMySql._autoCareMySqlPool;
 }

@@ -8,6 +8,7 @@ const files = [
   path.join(__dirname, 'mysql-pool.test.js'),
   path.join(__dirname, 'mongodb-connection.test.js'),
   path.join(__dirname, 'intake-photos.test.js'),
+  path.join(__dirname, 'photo-upload-transport.test.js'),
   path.join(__dirname, 'validation.test.js'),
   path.join(__dirname, 'integration.test.js'),
   path.join(__dirname, 'sql-runner.test.js'),

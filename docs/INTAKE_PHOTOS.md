@@ -14,12 +14,12 @@ Photos are optional: appointments without photos retain their existing workflow.
 ## Limits and storage
 
 - Up to 6 distinct images per appointment.
-- JPEG, PNG and WebP; non-animated, up to 3 MB each, 12 MB per request, 20 million decoded pixels per image.
+- JPEG, PNG and WebP; non-animated, up to 3 MB each, 12 MB per selection, 20 million decoded pixels per image. The website sends one image per request so a full selection also works within serverless hosting payload limits.
 - The server validates MIME/extension and decodes the actual pixels with Sharp. Disguised HTML/SVG, corrupt, truncated or oversized images are rejected.
 - Original bytes are stored in the additive MySQL appointment_intake_photos table, with appointment/staff foreign keys, server upload time, a note and SHA-256 checksum. This keeps the image and metadata in the same database transaction. Include this table in normal database backups.
 - Existing appointments and records are not rewritten by the migration. New installs run it through setup:db; existing installs can run npm run db:intake-photos.
 - Images are streamed only through authenticated endpoints, with private/no-store and nosniff headers. They are not placed in public/ and filenames never determine storage paths.
-- Repeated identical uploads are deduplicated by appointment/checksum. A failed validation or failed batch transaction does not leave a partial set of photos.
+- Repeated identical uploads are deduplicated by appointment/checksum. Each request is transactional. If a later image fails, earlier images remain saved; the form keeps its selection and explains that retrying safely skips duplicates.
 - Uploads lock the appointment row and recheck its state/job link before saving. Stored procedure booking calls now read OUT variables on the same connection so concurrent pool traffic cannot mix booking results.
 
 ## Boundaries

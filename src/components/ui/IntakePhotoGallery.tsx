@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Images are served through authenticated endpoints. */
 import { useCallback, useEffect, useState } from 'react';
 import { IntakePhotoPicker } from './IntakePhotoPicker';
+import { uploadIntakePhotos } from '@/lib/upload-intake-photos';
 
 interface Photo { photo_id: string; url: string; original_name: string; caption: string; uploaded_at: string; uploaded_by: number; sha256: string }
 export function IntakePhotoGallery({ appointmentId, canUpload }: { appointmentId: number; canUpload: boolean }) {
@@ -25,12 +26,8 @@ export function IntakePhotoGallery({ appointmentId, canUpload }: { appointmentId
   async function upload() {
     setBusy(true); setError('');
     try {
-      const body = new FormData(); files.forEach(file => body.append('photos', file)); body.append('caption', caption);
-      const res = await fetch(`/api/appointments/${appointmentId}/photos`, { method: 'POST', body });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error?.message || 'Could not save photos');
-      setPhotos(json.data.photos); setFiles([]); setCaption('');
-    } catch (err) { setError(err instanceof Error ? err.message : 'Could not save photos. You can retry.'); }
+      setPhotos(await uploadIntakePhotos<Photo>(appointmentId, files, caption)); setFiles([]); setCaption('');
+    } catch (err) { setError(`${err instanceof Error ? err.message : 'Could not save photos'}. Some photos may already be saved; retrying skips duplicates.`); }
     finally { setBusy(false); }
   }
   return <div className="space-y-4 text-xs">

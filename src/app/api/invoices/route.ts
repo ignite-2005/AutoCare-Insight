@@ -1,6 +1,7 @@
 ﻿export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
-import { query, queryOne } from '@/lib/db/mysql';
+import { query, getMySqlPool } from '@/lib/db/mysql';
+import type { PoolConnection } from 'mysql2/promise';
 import { requireAuth } from '@/lib/auth/session';
 import { enforcePermission } from '@/lib/auth/rbac';
 import { ValidationError, NotFoundError, ConflictError } from '@/lib/db/errors';
@@ -63,6 +64,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  let connection: PoolConnection | undefined;
   try {
     const user = requireAuth(req);
     enforcePermission(user, 'manage_invoices');
@@ -71,20 +73,26 @@ export async function POST(req: NextRequest) {
     const { job_id, tax_rate, discount_amount } = body;
 
     const jobId = Number(job_id);
-    if (!jobId || isNaN(jobId)) {
+    if (!Number.isSafeInteger(jobId) || jobId <= 0) {
       throw new ValidationError('Valid job_id is required to generate invoice');
     }
 
     const tax = tax_rate !== undefined ? Number(tax_rate) : 18.0;
     const discount = discount_amount !== undefined ? Number(discount_amount) : 0.0;
+    if (!Number.isFinite(tax) || tax < 0 || tax > 100 || !Number.isFinite(discount) || discount < 0) {
+      throw new ValidationError('Tax must be between 0 and 100, and discount must be non-negative');
+    }
 
-    // Call stored procedure sp_generate_invoice
-    await query(
+    // OUT variables belong to one MySQL session. Keep the same leased connection
+    // through the procedure, its result variables and the resulting invoice read.
+    connection = await getMySqlPool().getConnection();
+    await connection.query(
       `CALL sp_generate_invoice(?, ?, ?, @out_inv_id, @out_msg)`,
       [jobId, tax, discount]
     );
 
-    const procResult = await queryOne<any>('SELECT @out_inv_id AS inv_id, @out_msg AS msg');
+    const [procedureRows] = await connection.query<any[]>('SELECT @out_inv_id AS inv_id, @out_msg AS msg');
+    const procResult = procedureRows[0];
     if (!procResult || procResult.inv_id === 0) {
       const msg = procResult?.msg || 'Could not generate invoice';
       if (msg.includes('already exists')) {
@@ -93,11 +101,14 @@ export async function POST(req: NextRequest) {
       throw new ValidationError(msg);
     }
 
-    const invoice = await queryOne<any>('SELECT * FROM invoices WHERE invoice_id = ?', [procResult.inv_id]);
+    const [invoiceRows] = await connection.query<any[]>('SELECT * FROM invoices WHERE invoice_id = ?', [procResult.inv_id]);
+    const invoice = invoiceRows[0];
 
     return jsonCreated({ invoice });
   } catch (error) {
     return handleApiError(error);
+  } finally {
+    connection?.release();
   }
 }
 
