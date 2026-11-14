@@ -9,4 +9,8 @@
 - Preserve existing database data. Never automatically run 01_create_database.sql, which drops the database.
 - Use parameterized SQL and server-side authorization.
 - Tests contain assumptions about seeded data; demo edits may change results.
-- Main explanation and onboarding: VIVA_GUIDE.md. Local evidence: LOCAL_VERIFICATION.md.
+- Public app: https://autocare-insight.vercel.app. Hosting is independent of the developer's PC; use the existing free plans.
+- Main overview: README.md. Documentation map: docs/README.md. Technical report: docs/PROJECT_REPORT.md. Study guide: VIVA_GUIDE.md.
+- Current verification: docs/TEST_VERIFICATION_REPORT.md and docs/presentation/REVIEW.md. Older local checks in LOCAL_VERIFICATION.md are explicitly historical.
+- Use the approved project imagery. New artwork needs owner approval before integration. Device reduced-motion preferences remain supported; the manual footer option was removed.
+- Keep env files, provider tokens, private backups and raw cloud acceptance evidence out of Git. Publish sanitized verification summaries.

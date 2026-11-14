@@ -1,8 +1,14 @@
-﻿# AutoCare Insight - simple project explanation and viva guide
+# AutoCare Insight - simple project explanation and viva guide
 
 ## Read this first
 
 This is a vehicle workshop management application. It helps staff register customers and vehicles, book service appointments, assign mechanics, record repairs, track spare parts, create invoices and record payments.
+
+**Live demo:** [autocare-insight.vercel.app](https://autocare-insight.vercel.app).
+The application and both databases use free cloud hosting independently of the
+PC. The current framework is Next.js 15.5.29. Read the
+[hosting guide](deploy/MANAGED_HOSTING.md) and
+[verification report](docs/TEST_VERIFICATION_REPORT.md) for release details.
 
 If you have only one hour: read sections 1, 3, 4, 6, 8 and 10, then practise the demo in section 9.
 
@@ -40,7 +46,7 @@ Website demo accounts (after setup upgrades seed placeholder hashes):
 | Service advisor | rajesh@autocare.com | password123 |
 | Mechanic        | suresh@autocare.com | password123 |
 
-Other seeded users are Priya (advisor), Anjali and Vikram (mechanics). To switch roles in the visible interface, click Log Out and sign in with another seeded account. The auth context also retains a demo-role switching helper. These seeded accounts are intended for an academic demonstration.
+Other seeded users are Priya (advisor), Anjali and Vikram (mechanics). To switch roles, click Log Out and sign in with another account. There is no client-side role-switching helper. Mechanics can update and author reports only for assigned jobs. These accounts are intended for an academic demonstration.
 
 Troubleshooting:
 
@@ -80,7 +86,7 @@ Important files:
 | package.json                        | Commands and dependencies                                            |
 | src/app/layout.tsx                  | Root layout and providers                                            |
 | src/components/layout/AppLayout.tsx | Sidebar/navigation and role-aware layout                             |
-| src/lib/context/AuthContext.tsx     | Browser login state and demo role switching                          |
+| src/lib/context/AuthContext.tsx     | Browser login state, sign-in and sign-out                             |
 | src/app/api/auth/login/route.ts     | Login, password verification, JWT cookie                             |
 | src/lib/auth/session.ts             | JWT creation/verification and login rate limiter                     |
 | src/lib/auth/rbac.ts                | Role permissions and authorization                                   |
@@ -266,8 +272,8 @@ Demo changes persist. Do not run reset/drop scripts to get back to the initial s
 15. **How is role access enforced?** JWT session verification and server-side role permissions; navigation also adjusts for usability.
 16. **Does the search train on data?** No. It is hand-built text vectorization with cosine similarity over examples/reports.
 17. **What is a low-stock query?** SELECT from spare_parts where qty_in_stock <= reorder_level, also exposed as a view.
-18. **What are the limitations?** Academic demo credentials/role switching, no cross-database atomic transaction, basic diagnostic retrieval, concurrency risks to review, and tests partly tied to sample data.
-19. **What would you improve?** Production account provisioning, remove demo switching, stronger concurrent stock/billing controls, compensating cross-database writes, broader API/UI tests, and validated diagnostic models if needed.
+18. **What are the limitations?** Shared academic demo credentials, no cross-database atomic transaction, heuristic diagnostic retrieval, free-hosting startup delays, incomplete concurrency coverage, and tests partly tied to sample data.
+19. **What would you improve?** Private account provisioning, broader concurrent stock/billing checks, stronger cross-database recovery, customer service timelines and measured retrieval evaluation. The old demo role-switching helper is already removed.
 20. **What did you personally do?** Describe your actual study, setup, verification or implementation work accurately.
 
 ## 11. SQL examples to practise in MySQL Workbench

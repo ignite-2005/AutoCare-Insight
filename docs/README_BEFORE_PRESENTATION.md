@@ -1,8 +1,15 @@
-# Local setup on this PC
+# Historical README snapshot
 
-**New: [Vehicle intake photos](docs/INTAKE_PHOTOS.md)** ? optional appointment photos with authenticated viewing, upload validation and recorded timestamps. Existing installations: `npm run db:intake-photos`.
+> This preserves the earlier presentation. Versions, status and manual commands
+> below are historical. Read the [current README](../README.md),
+> [local guide](../LOCAL_VERIFICATION.md) and
+> [hosting guide](../deploy/MANAGED_HOSTING.md) for the released application.
 
-Read **[VIVA_GUIDE.md](VIVA_GUIDE.md)** for the simple explanation, demo walkthrough and viva questions. See **[LOCAL_VERIFICATION.md](LOCAL_VERIFICATION.md)** for current checks.
+## Earlier local setup notes
+
+**[Vehicle intake photos](INTAKE_PHOTOS.md)** - optional appointment photos with authenticated viewing, upload validation and recorded timestamps. Existing installations: `npm run db:intake-photos`.
+
+Read **[VIVA_GUIDE.md](../VIVA_GUIDE.md)** for the explanation, walkthrough and viva questions. See **[LOCAL_VERIFICATION.md](../LOCAL_VERIFICATION.md)** for current checks.
 
 Use `.env.local` for your installed MySQL credentials, then run:
 
@@ -22,7 +29,7 @@ Use this setup command instead of the historical manual instructions below. The 
 [![Next.js 14](https://img.shields.io/badge/Next.js-14.2.35-black.svg)](https://nextjs.org/)
 [![MySQL 8.0](https://img.shields.io/badge/MySQL-8.0.40-orange.svg)](https://www.mysql.com/)
 [![MongoDB 8.2](https://img.shields.io/badge/MongoDB-8.2.0-green.svg)](https://www.mongodb.com/)
-[![Tests Passing](https://img.shields.io/badge/Tests-31%2F31_Passing-brightgreen.svg)](docs/TEST_VERIFICATION_REPORT.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-31%2F31_Passing-brightgreen.svg)](TEST_VERIFICATION_REPORT.md)
 
 An enterprise-grade automotive service operations, spare parts inventory control, and predictive maintenance platform engineered for modern multi-brand and electric vehicle (EV) workshops. Built with a **Dual-Database Architecture** combining **MySQL 8.0** for relational ACID transactions with **MongoDB 8.2** for semi-structured polymorphic inspection findings and an in-memory **64-Dimensional Semantic Vector Search Engine** for natural-language diagnostic similarity matching.
 
@@ -416,14 +423,14 @@ npm run dev
 
 All documentation artifacts are available in the repository:
 
-1. **[Comprehensive Project Report (PDF)](docs/AutoCare_Insight_Project_Report.pdf)**: 633 KB publication-grade document covering all 13 sections.
-2. **[Project Report Source (Markdown)](docs/PROJECT_REPORT.md)**: Academic report source file.
-3. **[Formal Test Verification Report](docs/TEST_VERIFICATION_REPORT.md)**: Structured audit of all 31 automated test cases.
-4. **[Relational Data Dictionary](database/DATA_DICTIONARY.md)**: Detailed schema definitions for all 13 tables.
-5. **[Entity-Relationship Model](database/ER_DIAGRAM.md)**: ER diagrams, cardinalities, and relationship matrices.
-6. **[Database Verification Report](database/EXECUTION_AND_VERIFICATION_REPORT.md)**: Log of live migrations, row counts, and procedure runs.
-7. **[Requirements Traceability Matrix](database/REQUIREMENTS_TRACEABILITY.md)**: Maps academic requirements to files and routes.
-8. **[Advanced SQL Demonstration Guide](database/advanced/README.md)**: Details views, stored procedures, triggers, and ACID transactions.
+1. **[Comprehensive Project Report (PDF)](AutoCare_Insight_Project_Report.pdf)**: 633 KB publication-grade document covering all 13 sections.
+2. **[Project Report Source (Markdown)](PROJECT_REPORT.md)**: Academic report source file.
+3. **[Formal Test Verification Report](TEST_VERIFICATION_REPORT.md)**: Structured audit of all 31 automated test cases.
+4. **[Relational Data Dictionary](../database/DATA_DICTIONARY.md)**: Detailed schema definitions for all 13 tables.
+5. **[Entity-Relationship Model](../database/ER_DIAGRAM.md)**: ER diagrams, cardinalities, and relationship matrices.
+6. **[Database Verification Report](../database/EXECUTION_AND_VERIFICATION_REPORT.md)**: Log of live migrations, row counts, and procedure runs.
+7. **[Requirements Traceability Matrix](../database/REQUIREMENTS_TRACEABILITY.md)**: Maps academic requirements to files and routes.
+8. **[Advanced SQL Demonstration Guide](../database/advanced/README.md)**: Details views, stored procedures, triggers, and ACID transactions.
 
 ---
 

@@ -6,6 +6,10 @@ shared controls across the workshop workspace. Stage buttons follow the reading
 position and move to their corresponding chapters. Dialogs and controls provide
 interaction feedback. Dark/light themes and reduced motion remain available.
 
+The footer's manual Reduce motion option was removed in `00f2025` at the owner's
+request. Device preferences continue to apply automatically. Staged and public
+HTML checks verified the footer keeps its project link and omits the control.
+
 The GitHub overview follows SakuraMind's presentation sequence: branded opening,
 actual application screenshots, workflow, architecture, setup and roadmap.
 The banner and text-free website artwork were approved by the project owner.

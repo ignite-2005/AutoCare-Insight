@@ -1,5 +1,10 @@
 # AutoCare Insight — Database Execution & Verification Report
 
+> Historical execution snapshot from 27 October 2026. Commands, versions and
+> counts below are not current setup instructions. See the
+> [current verification report](../docs/TEST_VERIFICATION_REPORT.md) and
+> [hosting guide](../deploy/MANAGED_HOSTING.md) for the public release.
+
 **Execution Date:** October 27, 2026  
 **MySQL Server:** 8.0.33 Win64 on `localhost:3306` (Windows Service `MySQL80`)  
 **MongoDB Server:** 8.2.1 on `localhost:27017` (Windows Service `MongoDB`)  

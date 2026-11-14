@@ -1,6 +1,8 @@
-﻿# AutoCare Insight - five-minute viva revision
+# AutoCare Insight - five-minute viva revision
 
 **What it does:** manages a vehicle workshop, from appointments to repair jobs, stock and billing.
+
+**Live:** [autocare-insight.vercel.app](https://autocare-insight.vercel.app). Next.js 15.5.29 on Vercel Hobby with Enzonic MySQL and Atlas MongoDB; the PC can be switched off.
 
 **Say this:** "MySQL handles structured transactional data. MongoDB handles flexible inspection documents. Next.js provides both the React interface and backend API routes."
 
@@ -36,7 +38,11 @@
 
 **Configuration:** .env.local. Never disclose this file in the viva or publish it.
 
-**Limitations to admit:** academic role switcher, no atomic writes across both databases, heuristic diagnostics, sample-data-oriented tests and concurrency behaviour needing further hardening.
+**Role changes:** sign out and sign in as another account. Mechanics work on assigned jobs and cannot reassign mechanics. The old demo role-switching helper has been removed.
+
+**Verification:** 58 tests passed at the release checkpoint, with cloud workflow and public-access checks. See [verification](docs/TEST_VERIFICATION_REPORT.md).
+
+**Limitations to admit:** shared sample accounts, no atomic writes across both databases, heuristic diagnostics, seed-dependent tests, incomplete concurrency coverage and free-hosting startup delays. Payments are recorded without an external processor.
 
 For details, examples and troubleshooting, read VIVA_GUIDE.md. For verified local checks, read LOCAL_VERIFICATION.md.
 

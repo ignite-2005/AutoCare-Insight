@@ -1,4 +1,10 @@
-# AutoCare Insight — Implementation Plan
+# AutoCare Insight — Historical Implementation Plan
+
+> This is the original October 2026 plan. Pending statuses and tool versions
+> below are historical. The application is now public with its workshop flows
+> implemented. Read the [current overview](README.md), [changelog](CHANGELOG.md)
+> and [verification report](docs/TEST_VERIFICATION_REPORT.md) for the release.
+> Do not use this plan as a setup runbook.
 # Vehicle Service Management and Predictive Maintenance System
 
 Generated: Phase 1 & 2 Execution (October 2026)

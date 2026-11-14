@@ -1,3 +1,78 @@
+# AutoCare Insight - Test and Verification Report
+
+## Current checkpoint - 14 November 2026
+
+**Live:** [autocare-insight.vercel.app](https://autocare-insight.vercel.app)<br />
+**Framework:** Next.js 15.5.29; Vercel Node.js 22<br />
+**Suite:** 58 passed, zero failed at application commit `ec441d5`<br />
+**Build checks:** TypeScript and production build passed. Lint exits successfully
+with existing React hook-dependency warnings.
+
+The later footer-only change `00f2025` passed TypeScript, a production build and
+staged/public HTML checks. Documentation edits do not constitute a new test run.
+
+### Automated coverage
+
+| Area | Checked behaviour |
+| --- | --- |
+| Authentication and roles | Password/session helpers, permissions, signing-key validation and assigned-mechanic enforcement |
+| Connections | MySQL pool reuse, TLS, workshop clock, startup timeout; lazy/shared/recoverable MongoDB connections |
+| Intake photos | Decoding, formats, stream bounds, per-file transport and failed-upload behaviour |
+| Appointment time | Browser input/instant round trips in India, UTC and New York |
+| Reports | Required references, conditions, dates and health scores |
+| SQL integration | Sample accounts/catalogue, routines, views and all 20 registered queries |
+| MongoDB | Sample reports and all seven registered aggregation pipelines |
+| Diagnostics | Vector generation, normalization, cosine ranking and empty inputs |
+
+### Cloud acceptance
+
+Three sample roles passed real HTTP sign-in and permission checks. Temporary
+records exercised customer/vehicle creation, booking/rescheduling, a 5.4 MB
+selection via individual image requests, image privacy/deduplication/locking,
+job assignment, stock deduction, a linked MongoDB inspection, concurrent
+invoices and recorded payments.
+
+Test-owned records and inventory audit rows were removed. The dated migration
+baseline matched the unchanged source: 3,383 rows across 15 MySQL tables and
+three MongoDB reports. Seven routines, five triggers, six views, five MongoDB
+indexes and validators were retained. Later visitors can change sample records;
+these are acceptance counts, not permanently fixed live counts.
+
+Final public checks used no Vercel bypass: homepage/login, 12 JavaScript/CSS
+assets, optimized artwork, sign-in, workspace pages and main module reads
+passed. Anonymous private APIs returned 401. A later idle-period check observed
+a connection timeout followed by successful sign-in. MySQL's startup wait was
+increased from 10 to 30 seconds and staged/public checks passed again. Provider
+status remained active during follow-up, so all suspended-provider conditions
+were not tested.
+
+Footer checks verified removal of the manual motion control. Device preferences
+remain supported in CSS and motion hooks. Earlier desktop/mobile browser checks
+covered story navigation, themes, focus and reduced motion; cloud HTTP checks
+were not an exhaustive fresh visual or assistive-technology audit.
+
+### Reproduce and interpret
+
+Follow [local setup](../LOCAL_VERIFICATION.md), then run `npm run typecheck`,
+`npm run lint`, `npm test` and `npm run build`. The suite needs local databases
+and includes seed-data assumptions. HTTP smoke/intake scripts create temporary
+fixtures and should use a dedicated local test installation.
+
+Checks do not establish every edge case, complete financial/inventory concurrency
+coverage, a complete security/accessibility audit, unlimited scale or continuous
+free-provider uptime. The production-only dependency audit had zero findings at
+its checkpoint; development-tool findings were separate. No payment processor
+or trained diagnostic model is implied.
+
+Private backups and raw acceptance logs stay outside Git. See
+[managed hosting](../deploy/MANAGED_HOSTING.md) and
+[presentation review](presentation/REVIEW.md) for more detail.
+
+## Historical verification - 27 October 2026
+
+The original report below describes an earlier snapshot. Its test count,
+versions and timings are retained as history, not current verification.
+
 # AutoCare Insight — Formal Test & Verification Report
 
 **Project Title:** AutoCare Insight (Vehicle Service Management & Predictive Maintenance System)  

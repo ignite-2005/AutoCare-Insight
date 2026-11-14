@@ -1,8 +1,61 @@
-﻿# Local setup and verification - 11 November 2026
+# Local setup and verification
+
+## Current setup - 14 November 2026
+
+The current application uses Next.js 15.5.29, React 18 and TypeScript. Node.js 22
+is the documented runtime and the cloud host uses Node 22. The earlier Windows
+Node 24 checks below are retained as history.
+
+The [public demo](https://autocare-insight.vercel.app) runs independently of this
+computer. For local development, install Node.js 22, MySQL 8 and MongoDB 8, then:
+
+```powershell
+npm ci
+Copy-Item .env.example .env.local
+# Supply your own local database credentials and a random JWT_SECRET.
+npm run setup:db
+npm run doctor
+npm run dev
+```
+
+Generate the signing key with:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+Keep it in `.env.local`. Local setup uses `autocare_insight` and MongoDB
+`autocare_db`. The supported setup command preserves existing data; historical
+`01_create_database.sql` drops the database. Do not point local setup at the
+public demo or its separately configured hosted schema.
+
+After initial setup, use `npm run doctor` and `npm run dev`. Verify with:
+
+```powershell
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+The release checkpoint passed 58 tests, TypeScript and the cloud production
+build. Existing hook-dependency lint warnings remain. Tests expect the supplied
+seed data. HTTP smoke/intake scripts mutate temporary fixtures; use a dedicated
+local test installation for them.
+
+See [demo accounts](README.md#try-the-workspace), the [viva guide](VIVA_GUIDE.md),
+[verification report](docs/TEST_VERIFICATION_REPORT.md) and
+[managed hosting](deploy/MANAGED_HOSTING.md). Role changes require sign-out and
+another sign-in; the old demo role-switching helper has been removed.
+
+## Historical local checks - 11-12 November 2026
+
+Entries below describe earlier versions and repairs, not current deployment
+status, runtime instructions or test counts.
 
 ## Configuration completed
 
-- Project location: D:\SEM 5\DBMS\Mini project\DBMS_Assignment_updated.
+- Project location: the owner's local development checkout.
 - Node.js v24.18.0, npm 11.16.0; Next.js 14.2.35.
 - MySQL80 and MongoDB Windows services are running.
 - Updated .env.local to use the owner's supplied local MySQL password. The MySQL server account/password itself was not changed. This file is excluded from Git.

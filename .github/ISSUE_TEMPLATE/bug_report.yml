@@ -1,0 +1,59 @@
+name: Report a problem
+description: Describe a reproducible problem with the website or local setup.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Please use sample data. Do not include passwords, tokens, connection strings or private customer information."
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where did this happen?
+      options:
+        - Live cloud demo
+        - Local installation
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page or feature
+      placeholder: "Appointments, photo upload, invoice, sign-in..."
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Account role
+      options:
+        - Visitor / signed out
+        - Service advisor
+        - Mechanic
+        - Administrator
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open...\n2. Select...\n3. Observe..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: Include the visible error text and an optional screenshot with private information removed.
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: "Brave on Windows, Safari on iPhone..."

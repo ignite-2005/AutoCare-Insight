@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Try the live website
+    url: https://autocare-insight.vercel.app
+    about: Explore the shared demo before reporting an issue.
+  - name: Setup and documentation
+    url: https://github.com/ignite-2005/AutoCare-Insight/blob/master/docs/README.md
+    about: Read the setup, feature and deployment guides.

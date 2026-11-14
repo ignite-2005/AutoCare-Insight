@@ -19,6 +19,10 @@ checks for sign-in, the workspace pages and all main module read APIs. The
 check included an idle interval; provider status remained active, so it does
 not establish recovery from every possible suspended-provider condition.
 
+The interface follow-up `00f2025` removes the footer's manual motion option.
+TypeScript, the production build and staged/public footer checks passed. Device
+reduced-motion settings continue to apply automatically.
+
 The application and both databases run in cloud services. No PC tunnel, paid
 plan, student credit or card-backed trial is required for this deployment.
 This is a shared educational demo with sample accounts and mutable sample data.
@@ -77,6 +81,11 @@ provide an unlimited-capacity or continuous-uptime guarantee.
 Atlas's network policy must permit the application host. Vercel Hobby uses
 changing outbound addresses. Review that policy for the new application project;
 do not alter unrelated projects or disable certificate verification.
+
+For this shared demo, the dedicated AutoCare Atlas project permits 0.0.0.0/0
+to accommodate that changing egress. Its login endpoint is internet-accessible;
+data access still requires TLS and the database-scoped credentials. This rule
+does not apply to the owner's other Atlas projects.
 
 ## Production configuration
 
