@@ -128,6 +128,11 @@ they do not need to be enabled to deploy pushes. In particular, the API field
 Vercel build creation. See the
 [Vercel provider reference](https://github.com/vercel/terraform-provider-vercel/blob/main/docs/resources/project.md#nested-schema-for-git_provider_options).
 
+GitHub deployment reporting is enabled for this project so production releases
+can appear in the repository's Deployments section with their status and URL.
+Repository-dispatch events remain disabled; the About website URL is
+`https://autocare-insight.vercel.app`.
+
 No deploy hook is needed for ordinary Git pushes. After a push, verify that
 Vercel creates a deployment with source `git`, branch `master` and the expected
 commit SHA, then confirm its production build succeeds and the public URL works.
