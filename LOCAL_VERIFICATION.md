@@ -2,6 +2,9 @@
 
 ## Current setup - 14 November 2026
 
+The checkout folder is `AutoCare-Insight`. Commands below run from that folder;
+the launcher and database tools resolve their paths relative to it.
+
 The current application uses Next.js 15.5.29, React 18 and TypeScript. Node.js 22
 is the documented runtime and the cloud host uses Node 22. The earlier Windows
 Node 24 checks below are retained as history.

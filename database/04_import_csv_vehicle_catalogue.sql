@@ -2,6 +2,8 @@
 -- AutoCare Insight — Vehicle Service Management System
 -- Script 04: CSV Import — vehicle_catalogue table
 -- ============================================================
+-- Project folder: AutoCare-Insight. Run optional SQL examples from the project
+-- root so relative vehicle_management paths resolve. Supported setup: npm run setup:db.
 -- HOW TO RUN (Two options):
 --
 -- OPTION A — MySQL Workbench Import Wizard (Easiest)
@@ -43,7 +45,7 @@ USE autocare_insight;
 
 /*  ← Remove this comment block start to activate OPTION B
 
-LOAD DATA LOCAL INFILE 'D:/DBMS_Assignment/vehicle_management/Light Duty Vehicles.csv'
+LOAD DATA LOCAL INFILE 'vehicle_management/Light Duty Vehicles.csv'
 INTO TABLE vehicle_catalogue
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -112,7 +114,7 @@ SET
 
 /*
 
-LOAD DATA LOCAL INFILE 'D:/DBMS_Assignment/vehicle_management/Alternative Fuel Vehicles US.csv'
+LOAD DATA LOCAL INFILE 'vehicle_management/Alternative Fuel Vehicles US.csv'
 INTO TABLE vehicle_catalogue
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -171,7 +173,7 @@ SET
 
 /*
 
-LOAD DATA LOCAL INFILE 'D:/DBMS_Assignment/vehicle_management/Medium and Heavy Duty Vehicles.csv'
+LOAD DATA LOCAL INFILE 'vehicle_management/Medium and Heavy Duty Vehicles.csv'
 INTO TABLE vehicle_catalogue
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'

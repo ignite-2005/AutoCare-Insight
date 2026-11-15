@@ -67,7 +67,8 @@ Generated: Phase 1 & 2 Execution (October 2026)
 ## Migration Runner & Verification
 To execute the database scripts once the MySQL root password is provided:
 ```powershell
-cd D:\DBMS_Assignment\database
+# From the AutoCare-Insight project root:
+cd .\database
 .\run_all_migrations.ps1 -Password "<YOUR_MYSQL_PASSWORD>"
 ```
 Or run the scripts sequentially in MySQL Workbench (`Local instance MySQL80`).

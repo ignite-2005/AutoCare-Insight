@@ -103,7 +103,7 @@ SELECT 'maintenance_reminders', COUNT(*) FROM maintenance_reminders;
 
 ## 4. DDL Demonstration (Requirement 5: CREATE, ALTER, DROP)
 
-Executed via [`database/08_ddl_alter_drop_demo.sql`](file:///D:/DBMS_Assignment/database/08_ddl_alter_drop_demo.sql):
+Executed via [`database/08_ddl_alter_drop_demo.sql`](08_ddl_alter_drop_demo.sql):
 - **ALTER ADD COLUMN:** `customers.loyalty_points`, `service_jobs.warranty_months`, `maintenance_reminders.notification_channel`.
 - **ALTER MODIFY COLUMN:** `customers.phone VARCHAR(25)`.
 - **ALTER ADD CONSTRAINT:** `spare_parts.chk_part_selling_cost_margin CHECK (selling_price >= unit_cost)`.

@@ -1,6 +1,7 @@
 ﻿# Project working conventions
 
 - Stack: Next.js 15 App Router, React 18, TypeScript, Tailwind; mysql2 and MongoDB native drivers.
+- Checkout folder: AutoCare-Insight. Resolve paths from the repository root or script location rather than a machine-specific absolute path.
 - Pages: src/app. Server endpoints: src/app/api. Active DB helpers: src/lib/db.
 - Configuration: .env.local; standalone scripts/tests load scripts/env.js.
 - Run: npm run doctor, npm run setup:db (initial setup), npm run dev.

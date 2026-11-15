@@ -183,7 +183,7 @@ Modern automotive workshops manage two fundamentally distinct data workloads:
 ## 5. Repository Structure
 
 ```
-DBMS_Assignment/
+AutoCare-Insight/
 ├── database/                          # Relational & NoSQL Database Setup
 │   ├── 01_create_database.sql         # Database creation (autocare_insight, utf8mb4)
 │   ├── 02_create_tables.sql           # 13 tables with constraints, keys & indexes
@@ -266,7 +266,7 @@ Ensure the following environments are installed on your machine:
 ### Step 1: Clone Repository & Install Dependencies
 ```bash
 git clone <repository_url>
-cd DBMS_Assignment
+cd AutoCare-Insight
 npm install
 ```
 
