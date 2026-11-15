@@ -116,16 +116,22 @@ The repository includes `vercel.json` with automatic deployments enabled for
 Production database secrets remain in the existing Vercel project; they are not
 copied to GitHub or preview environments.
 
-The Git connection setup requires the owner to grant the Vercel GitHub App
-access to `ignite-2005/AutoCare-Insight`. The configuration is prepared, but the
-connection is awaiting that repository permission. GitHub rejected the current
-CLI authorization's attempt to change the app installation's access.
+The existing `autocare-insight` Vercel project is connected to
+`ignite-2005/AutoCare-Insight`, with `master` as its production branch. Pushes
+to that branch are configured to create production deployments using the
+project's existing environment variables and domain.
 
-After granting access, connect the repository to the existing `autocare-insight`
-Vercel project, confirm its production branch is `master`, and enable automatic
-Git deployments. Keep the current project and environment variables. Verify an
-actual push creates a successful production build and updates the public URL.
-A configured Git remote alone does not establish automatic deployment.
+The Git settings for pull-request/commit comments, `deployment_status` events
+and `repository_dispatch` events control GitHub reporting and integrations;
+they do not need to be enabled to deploy pushes. In particular, the API field
+`gitProviderOptions.createDeployments` controls GitHub deployment events, not
+Vercel build creation. See the
+[Vercel provider reference](https://github.com/vercel/terraform-provider-vercel/blob/main/docs/resources/project.md#nested-schema-for-git_provider_options).
+
+No deploy hook is needed for ordinary Git pushes. After a push, verify that
+Vercel creates a deployment with source `git`, branch `master` and the expected
+commit SHA, then confirm its production build succeeds and the public URL works.
+The whitelist source packager below remains available for manual CLI releases.
 
 ### Build and release checks
 

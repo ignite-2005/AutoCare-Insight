@@ -125,6 +125,11 @@ The live application uses **Vercel Hobby**, **Enzonic Free native MySQL**, and *
 
 The tested production build is public at [autocare-insight.vercel.app](https://autocare-insight.vercel.app). Backup recovery, database migration, the cloud workshop workflow and anonymous public access were verified before release. Free tiers have capacity limits and can pause idle databases. [Managed hosting guide](deploy/MANAGED_HOSTING.md) · [Deployment and Docker guide](docs/DEPLOYMENT.md).
 
+The existing Vercel project is connected to this GitHub repository. `master` is
+the production branch; other branches are disabled in `vercel.json`. Git pushes
+use the hosting project's existing secrets and domain. No deploy hook or paid
+GitHub Actions deployment service is required.
+
 ## Roadmap
 
 These are proposed improvements, not completed features:
